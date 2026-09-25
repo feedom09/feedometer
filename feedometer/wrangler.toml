@@ -10,7 +10,7 @@ WORKER_PUBLIC_URL = "https://feedom.feedom-8f1.workers.dev"
 APP_PUBLIC_URL = "https://feedometer-4vg.pages.dev"
 MAIL_FROM = "FeedOmeter <noreply@mail.ev2rule.com>"
 ADMIN_NOTIFY_EMAIL = "feedom@peopledotsports.com"
-GOOGLE_CLIENT_ID = "519822758554-19n3plblqq2nqago9r619kg5bi265674.apps.googleusercontent.com"
+GOOGLE_CLIENT_ID = "519822758554-s2qeq1aoscvgeqbio297v1akdrasnj4s.apps.googleusercontent.com"
 
 # -----------------------------------------------------------------------------
 # D1 Database: Disabled (Migration to SQL Server architecture)
