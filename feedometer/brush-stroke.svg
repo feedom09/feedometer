@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 110" width="340" height="110" fill="none">
+  <defs>
+    <!-- Organic Brush Texture Filter -->
+    <filter id="brush-texture" x="-5%" y="-10%" width="110%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045 0.08" numOctaves="3" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.5" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </defs>
+
+  <g filter="url(#brush-texture)">
+    <!-- Primary Thick Calligraphic Stroke Body -->
+    <path d="M 28,52 
+             C 18,46 12,38 24,30 
+             C 38,20 62,24 95,21 
+             C 142,16 195,14 248,18 
+             C 285,21 312,28 326,38 
+             C 334,44 330,53 318,59 
+             C 302,67 274,72 238,76 
+             C 188,82 135,84 88,82 
+             C 52,80 24,76 16,68 
+             C 10,61 14,54 28,52 Z" 
+          fill="#000000" />
+
+    <!-- Upper Expressive Bristle Layer -->
+    <path d="M 45,32 
+             C 70,18 120,12 180,13 
+             C 235,14 280,18 308,27 
+             C 295,20 250,15 190,14 
+             C 130,13 75,19 45,32 Z" 
+          fill="#000000" />
+
+    <!-- Lower Expressive Bristle Sweep -->
+    <path d="M 35,66 
+             C 72,82 130,88 195,86 
+             C 255,84 298,75 322,63 
+             C 298,72 245,80 185,81 
+             C 120,82 65,77 35,66 Z" 
+          fill="#000000" />
+
+    <!-- Left Tapered Stroke Tail & Splatters -->
+    <path d="M 18,48 C 6,42 2,36 8,32 C 14,28 22,34 26,42 Z" fill="#000000" />
+    <path d="M 12,58 C 4,64 6,70 14,68 C 20,66 22,58 18,52 Z" fill="#000000" />
+    
+    <!-- Right Dynamic Frayed Edge Bristles -->
+    <path d="M 315,35 C 328,32 338,36 332,44 C 326,50 318,44 315,35 Z" fill="#000000" />
+    <path d="M 320,52 C 334,56 336,64 326,68 C 316,72 312,62 320,52 Z" fill="#000000" />
+  </g>
+
+  <!-- Fine Vector Dry-Brush Stray Details -->
+  <circle cx="15" cy="38" r="2" fill="#000000" />
+  <circle cx="22" cy="74" r="1.5" fill="#000000" />
+  <circle cx="328" cy="31" r="1.8" fill="#000000" />
+  <circle cx="332" cy="58" r="2.2" fill="#000000" />
+  <circle cx="322" cy="73" r="1.5" fill="#000000" />
+</svg>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feed Filters Workspace — FeedOmeter 2.1</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Quicksand:wght@600;700;750;800&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+  <link rel="stylesheet" href="styles/feedometer.css" />
+  <link rel="stylesheet" href="styles/auth.css" />
+  <link rel="stylesheet" href="styles/filters-page.css" />
+  <link rel="stylesheet" href="navbar/navbar.css" />
+</head>
+<body>
+
+  <div class="filters-workspace-page">
+    
+    <!-- Top Header -->
+    <header class="filters-workspace-header">
+      <a href="add-source.html" class="filters-back-btn" id="filters-back-btn">
+        <span>←</span>
+        <span>Back to Add Source</span>
+      </a>
+      <div class="filters-workspace-copy">
+        <h1 id="filters-page-title">Clean up this feed preview</h1>
+        <p id="filters-page-source" class="filters-workspace-source">Tune quality, remove duplicates, and filter news stories in real time.</p>
+      </div>
+      <div class="filters-workspace-meta">
+        <span class="filters-workspace-badge" id="filters-page-count">0 items visible</span>
+      </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <main class="filters-workspace-layout">
+      
+      <!-- Filter Sidebar -->
+      <aside class="create-filters-sidebar">
+        
+        <div class="create-filters-topbar">
+          <div>
+            <p class="create-filters-eyebrow">Filters</p>
+            <h3 class="create-filters-title">Live Filter Rules</h3>
+          </div>
+          <label class="create-filters-master">
+            <span>Global filter</span>
+            <input type="checkbox" id="create-filter-enabled" checked />
+          </label>
+        </div>
+
+        <div class="create-filters-summary" id="create-filter-summary">
+          Toggling rules updates the live preview instantly.
+        </div>
+
+        <!-- 1. Quality -->
+        <section class="create-filter-group">
+          <div class="create-filter-group-head">
+            <h4>Quality</h4>
+            <p>Hide weak or incomplete items automatically.</p>
+          </div>
+          <div class="create-filter-checklist">
+            <label class="create-filter-check">
+              <div><input type="checkbox" id="filter-no-image" /><span>No images</span></div>
+              <span class="create-filter-count" id="count-no-image">0</span>
+            </label>
+            <label class="create-filter-check">
+              <div><input type="checkbox" id="filter-no-description" checked /><span>No description</span></div>
+              <span class="create-filter-count" id="count-no-description">0</span>
+            </label>
+            <label class="create-filter-check">
+              <div><input type="checkbox" id="filter-no-date" /><span>No dates</span></div>
+              <span class="create-filter-count" id="count-no-date">0</span>
+            </label>
+            <label class="create-filter-check">
+              <div><input type="checkbox" id="filter-no-secure-link" /><span>Non-HTTPS links</span></div>
+              <span class="create-filter-count" id="count-no-secure-link">0</span>
+            </label>
+          </div>
+        </section>
+
+        <!-- 2. Duplicate Cleanup -->
+        <section class="create-filter-group">
+          <div class="create-filter-group-head">
+            <h4>Duplicate Cleanup</h4>
+            <p>Remove repeated or near-repeated stories.</p>
+          </div>
+          <div class="create-filter-checklist">
+            <label class="create-filter-check">
+              <div><input type="checkbox" id="filter-duplicate-title" checked /><span>Duplicate titles</span></div>
+              <span class="create-filter-count" id="count-duplicate-title">0</span>
+            </label>
+            <label class="create-filter-check">
+              <div><input type="checkbox" id="filter-similar-title" /><span>Hide similar stories (≥74%)</span></div>
+              <span class="create-filter-count" id="count-similar-title">0</span>
+            </label>
+          </div>
+        </section>
+
+        <!-- 3. Freshness -->
+        <section class="create-filter-group">
+          <div class="create-filter-group-head">
+            <h4>Freshness</h4>
+            <p>Hide older stories from the live preview.</p>
+          </div>
+          <label class="create-filter-inline-toggle">
+            <input type="checkbox" id="filter-old-posts" />
+            <span>Hide posts older than</span>
+            <input type="number" id="filter-old-days" min="1" max="30" value="3" />
+            <span>days</span>
+            <span class="create-filter-count" id="count-old-posts" style="margin-left:auto;">0</span>
+          </label>
+        </section>
+
+        <!-- 4. Keywords -->
+        <section class="create-filter-group">
+          <div class="create-filter-group-head">
+            <h4>Keywords</h4>
+            <p>Use commas to include or exclude specific topics.</p>
+          </div>
+          <label class="create-filter-field">
+            <span>Include keywords</span>
+            <textarea id="filter-include-keywords" rows="2" placeholder="e.g. ai, chips, market"></textarea>
+          </label>
+          <label class="create-filter-field">
+            <span>Exclude keywords</span>
+            <textarea id="filter-exclude-keywords" rows="2" placeholder="e.g. rumor, podcast, transfer"></textarea>
+          </label>
+        </section>
+
+        <!-- 5. Domains -->
+        <section class="create-filter-group">
+          <div class="create-filter-group-head">
+            <h4>Domains</h4>
+            <p>Filter by specific publisher domains.</p>
+          </div>
+          <label class="create-filter-field">
+            <span>Only these domains</span>
+            <textarea id="filter-include-domains" rows="2" placeholder="e.g. reuters.com, bbc.com"></textarea>
+          </label>
+          <label class="create-filter-field">
+            <span>Hide these domains</span>
+            <textarea id="filter-exclude-domains" rows="2" placeholder="e.g. spam.com, clickbait.com"></textarea>
+          </label>
+        </section>
+
+        <div class="create-filter-actions">
+          <button type="button" class="create-filter-action-btn" id="create-filter-reset">Reset filters</button>
+        </div>
+
+      </aside>
+
+      <!-- Preview List Section -->
+      <section class="filters-workspace-preview">
+        <div class="create-filters-preview-head">
+          <h4 class="create-filters-preview-title">Visible Feed Items</h4>
+          <div class="filters-workspace-badge" id="create-filter-stats">0 visible</div>
+        </div>
+        <div id="create-filter-preview-list" class="filters-preview-list">
+          <!-- Filtered items render dynamically -->
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="scripts/feedometer-config.js"></script>
+  <script src="scripts/feedometer-auth.js"></script>
+  <script src="scripts/feedometer-filters.js"></script>
+
+</body>
+</html>
