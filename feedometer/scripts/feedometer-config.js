@@ -20,7 +20,7 @@
   global.FEEDOMETER_LOCAL_API = (host === 'localhost' || host === '127.0.0.1')
     ? LOCAL_API
     : '';
-  global.FEEDOMETER_GOOGLE_CLIENT_ID = '519822758554-19n3plblqq2nqago9r619kg5bi265674.apps.googleusercontent.com';
+  global.FEEDOMETER_GOOGLE_CLIENT_ID = '519822758554-s2qeq1aoscvgeqbio297v1akdrasnj4s.apps.googleusercontent.com';
   global.FeedOmeterConfig = {
     API_BASE_URL: global.FEEDOMETER_API_BASE,
     WORKER_URL: global.FEEDOMETER_API_BASE,
