@@ -1,0 +1,44 @@
+{
+  "name": "feedometer",
+  "version": "1.0.0",
+  "description": "Fast, Clean feedOmeter — Free Online RSS & Atom Reader",
+  "main": "index.html",
+  "type": "module",
+  "scripts": {
+    "build": "node build.js",
+    "minify": "node build.js",
+    "smoke:api": "node scripts/api-smoke.mjs",
+    "test:source-lifecycle": "node test_source_lifecycle.mjs",
+    "test:source-intake": "node test_source_intake.mjs",
+    "test:parser-regression": "node test_parser_regression.mjs",
+    "test:article-attribution": "node test_article_attribution.mjs",
+    "test:refresh-scheduler": "node test_refresh_scheduler.mjs",
+    "test:widget-embed": "node test_widget_embed_contract.mjs",
+    "test:viewer-contract": "node test_viewer_contract.mjs",
+    "test:builder-recipe-quality": "node test_builder_recipe_quality.mjs",
+    "test:builder-selector-config": "node test_builder_selector_config.mjs",
+    "test:visual-studio-interactions": "node test_visual_studio_interactions.mjs",
+    "test:integration-event-contract": "node test_integration_event_contract.mjs",
+    "test:webhook-target-safety": "node test_webhook_target_safety.mjs",
+    "test:webhook-delivery-harness": "node test_webhook_delivery_harness.mjs",
+    "test:integration-catalog": "node test_integration_catalog_contract.mjs",
+    "test:api-key-boundary": "node test_api_key_boundary.mjs",
+    "test:ai-enrichment-contract": "node test_ai_enrichment_contract.mjs",
+    "test:phase4-activation": "node test_phase4_activation_contract.mjs",
+    "test:automation-units": "node test_automation_units.mjs",
+    "test:phase4-curation": "node test_phase4_curation_contract.mjs",
+    "test:phase5-provider-contracts": "node test_phase5_provider_contracts.mjs",
+    "test:phase6-contracts": "node test_phase6_contracts.mjs"
+  },
+  "devDependencies": {
+    "clean-css": "^5.3.3",
+    "terser": "^5.51.2",
+    "wrangler": "^4.136.3"
+  },
+  "author": "FeedOmeter",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@cloudflare/puppeteer": "^1.4.0",
+    "linkedom": "^0.18.13"
+  }
+}

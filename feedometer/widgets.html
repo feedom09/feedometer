@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FeedOmeter Widget Studio — Embeddable RSS Feeds</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Quicksand:wght@600;700;750;800&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+  <link rel="stylesheet" href="styles/feedometer.css" />
+  <link rel="stylesheet" href="styles/auth.css" />
+  <link rel="stylesheet" href="styles/widgets-studio.css" />
+  <link rel="stylesheet" href="navbar/navbar.css" />
+</head>
+<body>
+
+  <div class="ws-studio-container">
+    
+    <!-- Top Action Bar -->
+    <header class="ws-topbar">
+      <div class="ws-topbar-left">
+        <a href="add-source.html" id="ws-btn-back-add-source" class="ws-back-link" title="Back to Add Source">
+          <span>←</span>
+          <span>Add Source</span>
+        </a>
+        <div class="ws-title-input-wrap">
+          <input type="text" id="ws-widget-title" class="ws-title-input" value="Live News Feed" placeholder="Widget Title..." title="Click to rename widget" />
+        </div>
+        <div class="ws-feed-search-wrap">
+          <input type="url" id="ws-feed-url" class="ws-feed-search-input" placeholder="Paste an RSS or Atom feed URL..." aria-label="RSS or Atom feed URL" />
+          <button type="button" id="ws-btn-load-feed" class="ws-feed-search-btn" title="Load RSS or Atom feed" aria-label="Load RSS or Atom feed">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="ws-topbar-right">
+        <button type="button" id="ws-btn-analytics" class="ws-btn-action ws-btn-secondary">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+          <span>Analytics</span>
+        </button>
+        <button type="button" id="ws-btn-get-code" class="ws-btn-action ws-btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>Get Embed Code</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Workspace Body -->
+    <div class="ws-workspace">
+      
+      <!-- Left Control Sidebar -->
+      <aside class="ws-sidebar">
+        
+        <!-- 1. Layout Style -->
+        <div class="ws-section">
+          <div class="ws-section-header">
+            <span class="ws-section-title">Layout Style</span>
+          </div>
+          <div class="ws-layout-grid">
+            <div class="ws-layout-card is-active" data-layout="news-wall">
+              <span class="ws-layout-icon">🧱</span>
+              <span class="ws-layout-name">News Wall</span>
+            </div>
+            <div class="ws-layout-card" data-layout="carousel">
+              <span class="ws-layout-icon">🎡</span>
+              <span class="ws-layout-name">Carousel</span>
+            </div>
+            <div class="ws-layout-card" data-layout="ticker">
+              <span class="ws-layout-icon">📢</span>
+              <span class="ws-layout-name">Ticker</span>
+            </div>
+            <div class="ws-layout-card" data-layout="magazine">
+              <span class="ws-layout-icon">📰</span>
+              <span class="ws-layout-name">Magazine</span>
+            </div>
+            <div class="ws-layout-card" data-layout="list">
+              <span class="ws-layout-icon">📋</span>
+              <span class="ws-layout-name">List</span>
+            </div>
+            <div class="ws-layout-card" data-layout="imageboard">
+              <span class="ws-layout-icon">🖼️</span>
+              <span class="ws-layout-name">Imageboard</span>
+            </div>
+          </div>
+          <div class="ws-control-row" id="ws-ticker-speed-row" style="margin-top: 0.75rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+              <label class="ws-label" for="ws-ticker-speed-slider" style="margin:0;">Ticker Speed (0–100)</label>
+              <span id="ws-ticker-speed-val" style="font-size:0.8rem; font-weight:700; color:#10b981;">20 (Slow)</span>
+            </div>
+            <input type="range" id="ws-ticker-speed-slider" class="ws-range-input" min="0" max="100" value="20" style="margin-bottom:0.5rem;" />
+            <select id="ws-ticker-speed-select" class="ws-select">
+              <option value="0">0 (Stop / Paused)</option>
+              <option value="10">10 (Ultra Slow / Gentle)</option>
+              <option value="20" selected>20 (Slow & Relaxed Reading)</option>
+              <option value="35">35 (Comfortable Pace)</option>
+              <option value="55">55 (Standard News)</option>
+              <option value="85">85 (Fast)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 2. Header & Branding -->
+        <div class="ws-section">
+          <div class="ws-section-header">
+            <span class="ws-section-title">Header & Title</span>
+          </div>
+          <div class="ws-toggle-row">
+            <span class="ws-toggle-label">Show Header Bar</span>
+            <label class="ws-switch">
+              <input type="checkbox" id="ws-toggle-header" checked />
+              <span class="ws-slider"></span>
+            </label>
+          </div>
+          <div class="ws-control-row">
+            <label class="ws-label" for="ws-header-align">Title Alignment</label>
+            <select id="ws-header-align" class="ws-select">
+              <option value="left" selected>Left Aligned</option>
+              <option value="center">Center Aligned</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 3. Theme & Colors -->
+        <div class="ws-section">
+          <div class="ws-section-header">
+            <span class="ws-section-title">Theme & Colors</span>
+          </div>
+          <div class="ws-control-row">
+            <label class="ws-label" for="ws-theme-select">Theme Preset</label>
+            <select id="ws-theme-select" class="ws-select">
+              <option value="light">Modern Light</option>
+              <option value="dark">Midnight Dark</option>
+              <option value="slate">Slate Minimal</option>
+              <option value="glass">Glassmorphism</option>
+              <option value="transparent">Transparent</option>
+            </select>
+          </div>
+          <div class="ws-control-row">
+            <label class="ws-label">Accent Color</label>
+            <div class="ws-color-row">
+              <input type="color" id="ws-color-accent" class="ws-color-input" value="#10b981" />
+            </div>
+          </div>
+          <div class="ws-control-row">
+            <label class="ws-label" for="ws-radius-select">Card Corner Radius</label>
+            <select id="ws-radius-select" class="ws-select">
+              <option value="0px">Square (0px)</option>
+              <option value="8px">Subtle (8px)</option>
+              <option value="12px" selected>Rounded (12px)</option>
+              <option value="20px">Curved (20px)</option>
+            </select>
+          </div>
+          <div class="ws-control-row">
+            <label class="ws-label" for="ws-shadow-select">Card Shadow</label>
+            <select id="ws-shadow-select" class="ws-select">
+              <option value="none">None (Flat)</option>
+              <option value="soft" selected>Soft Elevation</option>
+              <option value="raised">Raised Shadow</option>
+              <option value="glow">Accent Glow</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 4. Typography -->
+        <div class="ws-section">
+          <div class="ws-section-header">
+            <span class="ws-section-title">Typography</span>
+          </div>
+          <div class="ws-control-row">
+            <label class="ws-label" for="ws-font-select">Font Family</label>
+            <select id="ws-font-select" class="ws-select" aria-label="Font family"></select>
+          </div>
+          <div class="ws-control-row">
+            <label class="ws-label" for="ws-title-clamp">Title Length</label>
+            <select id="ws-title-clamp" class="ws-select">
+              <option value="1">1 Line (Compact)</option>
+              <option value="2" selected>2 Lines (Standard)</option>
+              <option value="3">3 Lines (Extended)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 5. Content & Fields -->
+        <div class="ws-section">
+          <div class="ws-section-header">
+            <span class="ws-section-title">Content & Fields</span>
+          </div>
+          <div class="ws-control-row">
+            <div style="display:flex; justify-content:space-between; margin-bottom:0.35rem;">
+              <label class="ws-label" style="margin:0;">Items Per Page</label>
+              <span id="ws-items-count-label" style="font-size:0.8rem; font-weight:700; color:#10b981;">6</span>
+            </div>
+            <input type="range" id="ws-items-slider" class="ws-range-input" min="3" max="35" value="6" />
+          </div>
+
+          <div class="ws-toggle-row">
+            <span class="ws-toggle-label">Show Thumbnails</span>
+            <label class="ws-switch">
+              <input type="checkbox" id="ws-toggle-thumbnails" checked />
+              <span class="ws-slider"></span>
+            </label>
+          </div>
+
+          <div class="ws-toggle-row">
+            <span class="ws-toggle-label">Show Descriptions</span>
+            <label class="ws-switch">
+              <input type="checkbox" id="ws-toggle-desc" checked />
+              <span class="ws-slider"></span>
+            </label>
+          </div>
+
+          <div class="ws-toggle-row">
+            <span class="ws-toggle-label">Show Date & Source</span>
+            <label class="ws-switch">
+              <input type="checkbox" id="ws-toggle-date" checked />
+              <span class="ws-slider"></span>
+            </label>
+          </div>
+
+          <div class="ws-control-row" style="margin-top:0.75rem;">
+            <label class="ws-label" for="ws-target-select">Open Links In</label>
+            <select id="ws-target-select" class="ws-select">
+              <option value="_blank" selected>New Tab (_blank)</option>
+              <option value="_self">Same Window (_self)</option>
+            </select>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- Center Preview Area -->
+      <main class="ws-preview-area">
+        <div class="ws-preview-topbar">
+          <div class="ws-viewport-switch">
+            <button type="button" class="ws-viewport-btn is-active" data-viewport="desktop">🖥️ Desktop</button>
+            <button type="button" class="ws-viewport-btn" data-viewport="tablet">📱 Tablet</button>
+            <button type="button" class="ws-viewport-btn" data-viewport="mobile">📱 Mobile</button>
+          </div>
+          <div class="ws-preview-status">
+            <span id="ws-live-status">Showing sample preview data</span>
+            <button type="button" class="btn-refresh" onclick="location.reload()" style="padding:0.25rem 0.65rem;">🔄 Refresh</button>
+          </div>
+        </div>
+
+        <div class="ws-preview-canvas-wrap">
+          <div id="ws-preview-canvas" class="ws-preview-canvas view-desktop">
+            <!-- Dynamic Widget Output -->
+          </div>
+        </div>
+      </main>
+
+    </div>
+
+  </div>
+
+  <!-- Embed Modal -->
+  <div id="ws-modal-embed" class="ws-modal-backdrop" hidden>
+    <div class="ws-modal" style="max-width:560px;">
+      <div class="ws-modal-header">
+        <h3 class="ws-modal-title">Get Embed Code</h3>
+        <button type="button" id="ws-modal-close-embed" class="ws-modal-close">✕</button>
+      </div>
+      <p style="font-size:0.88rem; color:#64748b; margin-bottom:1rem;">
+        Embed your live feed widget into WordPress, Notion, Shopify, Webflow, Squarespace, or any HTML page.
+      </p>
+
+      <div style="margin-bottom:1rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+          <label class="ws-label" style="margin:0;">1. Responsive iFrame Snippet (Recommended)</label>
+          <button type="button" class="ws-btn-action ws-btn-secondary" style="padding:0.2rem 0.6rem; font-size:0.75rem;" onclick="navigator.clipboard.writeText(document.getElementById('ws-embed-iframe-code').value); alert('iFrame code copied!');">
+            Copy iFrame
+          </button>
+        </div>
+        <textarea id="ws-embed-iframe-code" class="ws-code-box" rows="3" readonly></textarea>
+      </div>
+      
+      <div style="margin-bottom:1rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+          <label class="ws-label" style="margin:0;">2. Web Component / Script Tag</label>
+          <button type="button" class="ws-btn-action ws-btn-secondary" style="padding:0.2rem 0.6rem; font-size:0.75rem;" onclick="navigator.clipboard.writeText(document.getElementById('ws-embed-script-code').value); alert('Script code copied!');">
+            Copy Script
+          </button>
+        </div>
+        <textarea id="ws-embed-script-code" class="ws-code-box" rows="2" readonly></textarea>
+      </div>
+
+      <div style="margin-bottom:0.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+          <label class="ws-label" style="margin:0;">3. Direct Preview URL</label>
+          <a id="ws-embed-preview-link" href="#" target="_blank" rel="noopener noreferrer" style="font-size:0.78rem; font-weight:700; color:#10b981; text-decoration:none;">Open in New Window ↗</a>
+        </div>
+        <input type="text" id="ws-embed-direct-url" class="ws-select" style="font-family:monospace; font-size:0.8rem; background:#f8fafc;" readonly />
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytics Modal -->
+  <div id="ws-modal-analytics" class="ws-modal-backdrop" hidden>
+    <div class="ws-modal">
+      <div class="ws-modal-header">
+        <h3 class="ws-modal-title">Widget Analytics</h3>
+        <button type="button" id="ws-modal-close-analytics" class="ws-modal-close">✕</button>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1rem 0;">
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1.25rem; text-align:center;">
+          <div style="font-size:1.75rem; font-weight:800; color:#0f172a;">1,420</div>
+          <div style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase;">Impressions (30d)</div>
+        </div>
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1.25rem; text-align:center;">
+          <div style="font-size:1.75rem; font-weight:800; color:#10b981;">318</div>
+          <div style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase;">Article Clicks</div>
+        </div>
+      </div>
+      <p style="font-size:0.85rem; color:#64748b; text-align:center;">Real-time edge telemetry logged via Cloudflare D1.</p>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="scripts/feedometer-config.js"></script>
+  <script src="scripts/feedometer-auth.js"></script>
+  <script src="scripts/widget-font-catalog.js"></script>
+  <script src="scripts/feedometer-widgets.js"></script>
+
+</body>
+</html>

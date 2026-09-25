@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FeedOmeter 2.1 — Personal Reader & Feed Intelligence</title>
+  
+  <!-- Typography (Matching Search Page) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Master Design System & Reader Styles -->
+  <link rel="stylesheet" href="styles/feedometer.css">
+  <link rel="stylesheet" href="styles/feedometer-reader.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22><text y=%2222%22 font-size=%2222%22>📡</text></svg>">
+</head>
+<body>
+
+  <!-- 2-Pane Master Grid Container -->
+  <div class="reader-grid-container">
+
+    <!-- ── PANE 1: SIDEBAR (Matching #97d9ff Search Page Sidebar) ── -->
+    <aside id="reader-sidebar-pane" class="reader-sidebar-pane">
+      
+      <!-- Page brand header (matches Feed Search sidebar header) -->
+      <div class="sidebar-page-brand">
+        <h2 class="sidebar-page-title">One Stop Reader</h2>
+        <p class="sidebar-page-subtitle">Unified stream, starred &amp; read later</p>
+      </div>
+
+      <!-- Navigation & Folders Scroll -->
+      <div class="sidebar-scroll-area">
+        
+        <!-- Section 1: STREAMS -->
+        <div class="sidebar-nav-section-title">
+          <span>Streams</span>
+          <span class="section-subtext">live feed</span>
+        </div>
+        <div class="sidebar-nav-item active" data-nav-tab="all">
+          <div class="nav-icon-label">
+            <span>📰</span>
+            <span>All Feeds</span>
+          </div>
+          <span class="nav-badge" id="badge-all-count">live</span>
+        </div>
+        <div class="sidebar-nav-item" data-nav-tab="starred">
+          <div class="nav-icon-label">
+            <span>⭐</span>
+            <span>Starred Bookmarks</span>
+          </div>
+          <span class="nav-badge" id="badge-starred-count">saved</span>
+        </div>
+        <div class="sidebar-nav-item" data-nav-tab="saved">
+          <div class="nav-icon-label">
+            <span>⏳</span>
+            <span>Read Later Queue</span>
+          </div>
+          <span class="nav-badge" id="badge-saved-count">queue</span>
+        </div>
+
+        <!-- Section 2: FOLDERS -->
+        <div class="sidebar-nav-section-title">
+          <span>Folders</span>
+          <span class="section-subtext">+ new</span>
+        </div>
+        <div id="sidebar-folder-tree">
+          <!-- Populated dynamically via JS -->
+        </div>
+
+      </div>
+
+    </aside>
+
+    <!-- ── PANE 2: RIGHT MAIN STREAM PANE ── -->
+    <main id="reader-stream-pane" class="reader-stream-pane">
+      
+      <!-- Stream Header & Toolbar -->
+      <div class="stream-pane-header">
+        <div class="stream-top-row">
+          <div>
+            <h2 id="stream-context-title" class="stream-context-title">
+              <span>📰</span> <span>All Feeds</span>
+            </h2>
+            <div id="stream-context-subtitle" class="stream-context-subtitle">Unified chronological intelligence stream</div>
+          </div>
+        </div>
+
+        <!-- Filter & View Controls Toolbar -->
+        <div class="stream-controls-bar">
+          <div class="stream-search-box">
+            <span class="stream-search-icon">🔍</span>
+            <input id="stream-search-input" type="text" class="stream-search-input" placeholder="Search articles, keywords, or topics...">
+          </div>
+
+          <div class="stream-toolbar-right">
+            <!-- Sort By Control (Matching Screenshot 3) -->
+            <div class="sort-by-group">
+              <label for="stream-sort-select">Sort By:</label>
+              <select id="stream-sort-select" class="sort-by-select">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="source">Source (A-Z)</option>
+                <option value="title">Title (A-Z)</option>
+              </select>
+            </div>
+
+            <!-- View Mode Switcher Pill (Matching Screenshot 2) -->
+            <div class="view-mode-pill" id="view-mode-pill">
+              <button type="button" class="view-mode-btn active" id="btn-view-list" data-view="list" title="List View">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+              </button>
+              <button type="button" class="view-mode-btn" id="btn-view-cards" data-view="cards" title="Cards View">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading Indicator -->
+      <div id="stream-loader" style="display: none; padding: 1.5rem; text-align: center; color: #64748b;">
+        <p style="font-size: 0.88rem;">Ingesting & fusing stories...</p>
+      </div>
+
+      <!-- Article Stream Scroll Area -->
+      <div id="stream-cards-list" class="stream-scroll-area cards-list">
+        <!-- Populated dynamically via JS in List or Cards format -->
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- ── FULLSCREEN READING OVERLAY MODAL ── -->
+  <div id="reading-modal" class="reader-reading-modal" style="display: none;">
+    <div class="reader-reading-container">
+      <div class="reader-reading-topbar">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span id="reading-source-badge" class="list-source-badge">Source</span>
+          <span id="reading-time-ago" style="font-size: 0.78rem; color: #64748b;">Just now</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <button type="button" id="btn-reading-smaller" class="action-btn-pill" title="Smaller font">A-</button>
+          <button type="button" id="btn-reading-bigger" class="action-btn-pill" title="Larger font">A+</button>
+          <button type="button" id="btn-reading-serif" class="action-btn-pill" title="Toggle Serif">Serif</button>
+          <a id="reading-orig-link" href="#" target="_blank" rel="noopener noreferrer" class="action-btn-pill" style="color: #2563eb; text-decoration: none;">
+            Open Original ↗
+          </a>
+          <button type="button" id="btn-close-reading-modal" class="action-btn-pill" style="font-weight: 700;">✕</button>
+        </div>
+      </div>
+      <div class="reader-reading-body">
+        <h1 id="reading-article-title" class="reading-article-title"></h1>
+        <div id="reading-article-meta" class="reading-article-meta"></div>
+        <img id="reading-hero-img" class="reading-hero-img" style="display: none;" alt="Article Image" />
+        <audio id="reading-audio-player" class="reader-audio-player" controls style="display: none;"></audio>
+        <div id="reading-prose" class="reading-prose"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODAL 1: AUTHENTICATION (Mandatory Login & Recovery) ── -->
+  <div id="auth-modal" class="reader-modal-backdrop" style="display: none;">
+    <div class="reader-modal-card">
+      <div class="modal-header">
+        <h3 id="auth-modal-title" class="modal-title">Sign In to FeedOmeter</h3>
+      </div>
+
+      <!-- Auth Mode Tabs (Sign In / Register) -->
+      <div id="auth-tabs-row" style="display: flex; border-bottom: 1px solid var(--border-color); gap: 1rem;">
+        <button id="auth-tab-login" class="sidebar-nav-item active" style="flex: 1; justify-content: center;" onclick="window.switchAuthMode('login');">Sign In</button>
+        <button id="auth-tab-register" class="sidebar-nav-item" style="flex: 1; justify-content: center;" onclick="window.switchAuthMode('register');">Register</button>
+      </div>
+
+      <div id="auth-error-msg" style="display: none; padding: 0.5rem; background: #fef2f2; color: #dc2626; border-radius: 6px; font-size: 0.85rem;"></div>
+      <div id="auth-success-msg" style="display: none; padding: 0.5rem; background: #ecfdf5; color: #059669; border-radius: 6px; font-size: 0.85rem;"></div>
+
+      <!-- 1. Primary Login / Register Form -->
+      <form id="auth-form" data-mode="login" style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <div id="auth-name-row" style="display: none;">
+          <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">Full Name</label>
+          <input id="auth-name" type="text" class="stream-search-input" style="width: 100%; box-sizing: border-box;" placeholder="Alex Smith">
+        </div>
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">Email Address</label>
+          <input id="auth-email" type="email" required class="stream-search-input" style="width: 100%; box-sizing: border-box;" placeholder="user@example.com">
+        </div>
+        <div>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.25rem;">
+            <label style="font-size: 0.8rem; font-weight: 600;">Password</label>
+            <button type="button" id="btn-forgot-password-trigger" style="background: none; border: none; font-size: 0.76rem; color: #0284c7; cursor: pointer; text-decoration: underline; padding: 0;" onclick="window.switchAuthMode('forgot');">Forgot password?</button>
+          </div>
+          <input id="auth-password" type="password" required minlength="8" class="stream-search-input" style="width: 100%; box-sizing: border-box;" placeholder="••••••••">
+        </div>
+        <button id="auth-submit-btn" type="submit" class="btn-primary" style="width: 100%; padding: 0.65rem; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 0.5rem;">
+          Sign In
+        </button>
+      </form>
+
+      <!-- 2. Forgot Password Panel -->
+      <div id="auth-forgot-panel" style="display: none; flex-direction: column; gap: 0.75rem;">
+        <p style="font-size: 0.82rem; color: var(--text-secondary, #64748b); margin: 0;">
+          Enter the email address associated with your FeedOmeter account. We will prepare a secure password reset token for you.
+        </p>
+        <form id="forgot-form" style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <div>
+            <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">Email Address</label>
+            <input id="forgot-email" type="email" required class="stream-search-input" style="width: 100%; box-sizing: border-box;" placeholder="user@example.com">
+          </div>
+          <button id="forgot-submit-btn" type="submit" class="btn-primary" style="width: 100%; padding: 0.65rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+            Request Password Reset
+          </button>
+          <button type="button" class="btn-secondary" style="width: 100%; padding: 0.55rem; border-radius: 8px; font-size: 0.82rem; cursor: pointer;" onclick="window.switchAuthMode('login');">
+            ← Back to Sign In
+          </button>
+        </form>
+      </div>
+
+      <!-- 3. Reset Password Panel (When token is present) -->
+      <div id="auth-reset-panel" style="display: none; flex-direction: column; gap: 0.75rem;">
+        <p style="font-size: 0.82rem; color: var(--text-secondary, #64748b); margin: 0;">
+          Set a new, secure password for <strong id="reset-account-email">your account</strong>.
+        </p>
+        <form id="reset-form" style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <input type="hidden" id="reset-token-val" value="">
+          <div>
+            <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">New Password</label>
+            <input id="reset-password-input" type="password" required minlength="8" class="stream-search-input" style="width: 100%; box-sizing: border-box;" placeholder="At least 8 characters">
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">Confirm New Password</label>
+            <input id="reset-password-confirm" type="password" required minlength="8" class="stream-search-input" style="width: 100%; box-sizing: border-box;" placeholder="Re-enter password">
+          </div>
+          <button id="reset-submit-btn" type="submit" class="btn-primary" style="width: 100%; padding: 0.65rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+            Update Password & Sign In
+          </button>
+          <button type="button" class="btn-secondary" style="width: 100%; padding: 0.55rem; border-radius: 8px; font-size: 0.82rem; cursor: pointer;" onclick="window.switchAuthMode('login');">
+            Cancel
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── MODAL 2: ADD RSS FEED ── -->
+  <div id="add-feed-modal" class="reader-modal-backdrop" style="display: none;">
+    <div class="reader-modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Subscribe to Feed</h3>
+        <button data-modal-close class="card-action-btn">✕</button>
+      </div>
+      <form id="add-feed-form" style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">RSS/Atom Feed URL</label>
+          <input id="feed-url-input" type="url" required class="stream-search-input" style="width: 100%; box-sizing: border-box;" placeholder="https://news.ycombinator.com/rss">
+        </div>
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">Feed Title (Optional)</label>
+          <input id="feed-title-input" type="text" class="stream-search-input" style="width: 100%; box-sizing: border-box;" placeholder="Hacker News">
+        </div>
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">Category</label>
+          <input id="feed-category-input" type="text" class="stream-search-input" style="width: 100%; box-sizing: border-box;" placeholder="tech, news, design...">
+        </div>
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">Assign to Folder</label>
+          <select id="feed-folder-select" class="stream-search-input" style="width: 100%; box-sizing: border-box;">
+            <option value="">(No folder / Top level)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%; padding: 0.65rem; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 0.5rem;">
+          Subscribe
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── MODAL 3: ADD FOLDER ── -->
+  <div id="add-folder-modal" class="reader-modal-backdrop" style="display: none;">
+    <div class="reader-modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Create Folder</h3>
+        <button data-modal-close class="card-action-btn">✕</button>
+      </div>
+      <form id="add-folder-form" style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">Folder Name</label>
+          <input id="folder-name-input" type="text" required class="stream-search-input" style="width: 100%; box-sizing: border-box;" placeholder="Tech & Engineering">
+        </div>
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">Icon</label>
+          <input id="folder-icon-input" type="text" class="stream-search-input" style="width: 100%; box-sizing: border-box;" value="📁">
+        </div>
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">Parent Folder (Optional for Nesting)</label>
+          <select id="folder-parent-select" class="stream-search-input" style="width: 100%; box-sizing: border-box;">
+            <option value="">(None - Top Level Folder)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%; padding: 0.65rem; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 0.5rem;">
+          Create Folder
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Client Application Scripts -->
+  <script src="scripts/feedometer-config.js"></script>
+  <script src="scripts/feedometer-auth.js"></script>
+  <script src="scripts/smart-crop.js"></script>
+  <script src="scripts/feed-imaging.js"></script>
+  <script src="scripts/feedometer-reader.js"></script>
+</body>
+</html>

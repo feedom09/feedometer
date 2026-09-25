@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Top Stories — Live Fusion — FeedOmeter 2.1</title>
+  <link rel="stylesheet" href="styles/feedometer.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22><text y=%2222%22 font-size=%2222%22>📡</text></svg>">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+      background: var(--bg-primary, #ffffff);
+      color: var(--text-primary, #0f172a);
+      line-height: 1.5;
+      padding: 1.25rem 1.5rem 3rem;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .page-container {
+      max-width: 1750px;
+      margin: 0 auto;
+    }
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color, #e2e8f0);
+    }
+    .page-title-group h1 {
+      font-family: var(--font-display, 'Quicksand', sans-serif);
+      font-size: 1.75rem;
+      font-weight: 750;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .page-title-group p {
+      font-size: 0.9rem;
+      color: var(--text-secondary, #64748b);
+      margin-top: 0.25rem;
+    }
+    .page-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: var(--btn-radius, 8px);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border-color, #e2e8f0);
+      background: #ffffff;
+      color: var(--text-primary, #0f172a);
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .btn:hover {
+      background: var(--bg-card-hover, #f8fafc);
+      border-color: #cbd5e1;
+    }
+    .btn-primary {
+      background: var(--btn-primary-bg, #0f172a);
+      color: #ffffff;
+      border-color: var(--btn-primary-bg, #0f172a);
+    }
+    .btn-primary:hover {
+      background: #000000;
+      color: #ffffff;
+    }
+    .btn-square {
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 9px;
+      font-size: 1.15rem;
+      cursor: pointer;
+      border: 1px solid var(--border-color, #e2e8f0);
+      background: #ffffff;
+      color: var(--text-primary, #0f172a);
+      transition: all 0.15s ease;
+    }
+    .btn-square:hover {
+      background: var(--bg-card-hover, #f1f5f9);
+      border-color: #cbd5e1;
+      transform: translateY(-1px);
+    }
+    .btn-square-primary {
+      background: var(--btn-primary-bg, #0f172a);
+      color: #ffffff;
+      border-color: var(--btn-primary-bg, #0f172a);
+    }
+    .btn-square-primary:hover {
+      background: #000000;
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+    .btn-square.active-stream {
+      background: #fef2f2;
+      border-color: #fca5a5;
+      color: #ef4444;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.35);
+      animation: flamePulse 1.5s infinite alternate;
+    }
+    @keyframes flamePulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.08); }
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.85rem;
+    }
+    @media (max-width: 1400px) {
+      .card-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.85rem;
+      }
+    }
+    @media (max-width: 1100px) {
+      .card-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.75rem;
+      }
+    }
+    @media (max-width: 768px) {
+      .card-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+      }
+    }
+    @media (max-width: 480px) {
+      .card-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
+    }
+    .article-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color, #e2e8f0);
+      border-radius: 12px;
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.5rem;
+      transition: all 0.18s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .article-card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.08);
+      transform: translateY(-2px);
+    }
+    /* Visual Media & Face Centering Container */
+    .article-card-media {
+      width: 100%;
+      height: 125px;
+      border-radius: 8px;
+      background: var(--bg-card-hover, #f1f5f9);
+      overflow: hidden;
+      position: relative;
+    }
+    .article-card-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 50% 20%;
+      display: block;
+      transition: transform 0.25s ease;
+    }
+    .article-card:hover .article-card-img {
+      transform: scale(1.03);
+    }
+    .article-card-fallback {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #475569;
+      background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+    }
+    .article-source-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: var(--text-secondary, #64748b);
+    }
+    .article-source-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 999px;
+      background: var(--bg-card-hover, #f1f5f9);
+      font-weight: 600;
+      font-size: 0.70rem;
+      color: var(--text-primary, #0f172a);
+      max-width: 65%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .article-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      line-height: 1.3;
+      color: var(--text-primary, #0f172a);
+      text-decoration: none;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-top: 0.1rem;
+    }
+    .article-title:hover {
+      color: var(--accent, #0284c7);
+    }
+    .article-snippet {
+      font-size: 0.76rem;
+      color: var(--text-secondary, #64748b);
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .article-card-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 0.45rem;
+      border-top: 1px solid var(--border-color, #f1f5f9);
+      margin-top: auto;
+    }
+    .action-icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 0.3rem;
+      border-radius: 6px;
+      color: var(--text-secondary, #64748b);
+      transition: all 0.12s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .action-icon-btn:hover {
+      background: var(--bg-card-hover, #f1f5f9);
+      color: var(--text-primary, #0f172a);
+    }
+    .action-icon-btn.active-star {
+      color: #f59e0b;
+    }
+    .action-icon-btn.active-bookmark {
+      color: #0284c7;
+    }
+    .action-icon-btn.disabled-guest-btn {
+      opacity: 0.32;
+      cursor: not-allowed;
+      filter: grayscale(1);
+    }
+    .action-icon-btn.disabled-guest-btn:hover {
+      background: #fef2f2;
+      color: #dc2626;
+      opacity: 0.75;
+    }
+    .search-bar-input {
+      width: 100%;
+      padding: 0.65rem 1rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-color, #e2e8f0);
+      font-size: 0.9rem;
+      margin-bottom: 1.25rem;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+    .search-bar-input:focus {
+      border-color: #0f172a;
+    }
+    /* Reading Drawer/Modal */
+    .reader-modal-backdrop {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1rem;
+    }
+    .reader-modal-backdrop.open {
+      display: flex;
+    }
+    .reader-modal {
+      background: #ffffff;
+      border-radius: 16px;
+      max-width: 760px;
+      width: 100%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+      overflow: hidden;
+    }
+    .reader-modal-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border-color, #e2e8f0);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .reader-modal-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+      line-height: 1.7;
+      font-size: 1rem;
+    }
+    
+
+    /* Shimmer Skeleton Placeholder Grid */
+    .skeleton-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color, #e2e8f0);
+      border-radius: 12px;
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      min-height: 220px;
+    }
+    .skeleton-media {
+      width: 100%;
+      height: 110px;
+      border-radius: 8px;
+      background: #f1f5f9;
+    }
+    .skeleton-badge {
+      width: 65px;
+      height: 16px;
+      border-radius: 4px;
+      background: #f1f5f9;
+    }
+    .skeleton-line {
+      height: 14px;
+      border-radius: 4px;
+      background: #f1f5f9;
+    }
+    .skeleton-line-sm {
+      height: 10px;
+      border-radius: 4px;
+      background: #f1f5f9;
+    }
+    .shimmer-animated {
+      background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+    <div class="page-header">
+      <div class="page-title-group">
+        <h1>Top Stories</h1>
+        <p>Real-time breaking news from your followed feeds</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn-square" onclick="fetchStories()" title="Refresh Top Stories">🔄</button>
+        <button id="btn-live-stream" class="btn-square btn-square-primary" onclick="toggleLiveStream()" title="Toggle Live Stream">🔥</button>
+      </div>
+    </div>
+
+    <div id="stories-grid" class="card-grid">
+      <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #64748b;">
+        <span>📡 Ingesting live top stories...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reader Modal -->
+  <div id="reader-modal" class="reader-modal-backdrop" onclick="closeModal(event)">
+    <div class="reader-modal" onclick="event.stopPropagation()">
+      <div class="reader-modal-header">
+        <div id="modal-source" class="article-source-badge">Source</div>
+        <button class="action-icon-btn" onclick="closeModal()">✕</button>
+      </div>
+      <div class="reader-modal-body">
+        <h2 id="modal-title" style="margin-bottom: 0.75rem; font-size: 1.35rem; line-height: 1.35;"></h2>
+        <div id="modal-meta" style="font-size: 0.8rem; color: #64748b; margin-bottom: 1.25rem;"></div>
+        <div id="modal-content" style="line-height: 1.7; color: #334155;"></div>
+        <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+          <a id="modal-link" href="#" target="_blank" class="btn btn-primary">Read Original Story ↗</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <script src="scripts/feedometer-config.js"></script>
+  <script src="scripts/feedometer-auth.js"></script>
+  <script src="scripts/smart-crop.js"></script>
+  <script src="scripts/feed-imaging.js"></script>
+  <script>
+    let rawStories = [];
+    let isLiveStreaming = false;
+    let liveStreamTimer = null;
+    let isInitialLoading = true;
+
+    function renderSkeletonGrid(count = 10) {
+      const grid = document.getElementById('stories-grid');
+      if (!grid) return;
+      let skeletonsHtml = '';
+      for (let i = 0; i < count; i++) {
+        skeletonsHtml += `
+          <div class="skeleton-card">
+            <div class="skeleton-media shimmer-animated"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div class="skeleton-badge shimmer-animated"></div>
+              <div style="width:40px; height:12px; background:#f1f5f9; border-radius:3px;" class="shimmer-animated"></div>
+            </div>
+            <div class="skeleton-line shimmer-animated" style="width: 90%;"></div>
+            <div class="skeleton-line shimmer-animated" style="width: 70%;"></div>
+            <div class="skeleton-line-sm shimmer-animated" style="width: 50%;"></div>
+          </div>
+        `;
+      }
+      grid.innerHTML = skeletonsHtml;
+    }
+
+    function normalizeStoryItem(i) {
+      return {
+        id: i.id,
+        title: i.title,
+        url: i.link || i.url,
+        snippet: i.summary || i.snippet || i.description || '',
+        sourceTitle: (i.source && i.source.title) || i.sourceTitle || i.source_title || 'Feed',
+        category: i.category || (i.source && i.source.category) || 'General',
+        channel_tags: i.channel_tags || [],
+        published: i.published,
+        image: i.image || i.image_url || '',
+        content: i.content || i.summary || i.snippet || i.description || ''
+      };
+    }
+
+    function hydrateFromCache() {
+      try {
+        if (window.FeedOmeterAuth && window.FeedOmeterAuth.isAuthenticated()) {
+          renderSkeletonGrid(15);
+          return false;
+        }
+        const cached = localStorage.getItem('feedometer_cached_top_stories');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            rawStories = parsed;
+            isInitialLoading = false;
+            renderStories();
+            return true;
+          }
+        }
+      } catch (e) {}
+      renderSkeletonGrid(15);
+      return false;
+    }
+
+    async function fetchStories() {
+      const grid = document.getElementById('stories-grid');
+      const apiBase = (window.FEEDOMETER_API_BASE || (window.FeedOmeterConfig && window.FeedOmeterConfig.API_BASE_URL) || 'https://feedometer-api.feedometer.workers.dev').replace(/\/$/, '');
+
+      if (rawStories.length === 0) {
+        renderSkeletonGrid(15);
+      }
+
+      // TIER 1: Fast initial batch (~20 stories)
+      try {
+        let json1 = null;
+        const folderId = new URLSearchParams(window.location.search).get('folder_id');
+        const streamOpts = { limit: 20 };
+        if (folderId) streamOpts.folderId = folderId;
+        if (window.FeedOmeterAuth && window.FeedOmeterAuth.isAuthenticated() && window.FeedOmeterAuth.getStream) {
+          json1 = await window.FeedOmeterAuth.getStream(streamOpts);
+        } else if (window.FeedOmeterAuth && window.FeedOmeterAuth.getGuestFollows && window.FeedOmeterAuth.getStream) {
+          const urls = window.FeedOmeterAuth.getGuestFollows().map(function (f) { return f.feed_url || f.url; }).filter(Boolean).slice(0, 20);
+          if (urls.length) {
+            streamOpts.urls = urls.join(',');
+            json1 = await window.FeedOmeterAuth.getStream(streamOpts);
+          }
+        }
+        if (window.FeedOmeterAuth && window.FeedOmeterAuth.isAuthenticated()) {
+          try {
+            const subs = await window.FeedOmeterAuth.getSubscriptions();
+            const n = (subs.subscriptions || []).length;
+            if (n === 0 && !folderId) {
+              rawStories = [];
+              isInitialLoading = false;
+              renderStories([]);
+              return;
+            }
+          } catch (e) {}
+        }
+
+        if (json1 && Array.isArray(json1.items) && json1.items.length > 0) {
+          const tier1Stories = json1.items.map(normalizeStoryItem);
+          rawStories = tier1Stories;
+          isInitialLoading = false;
+          renderStories();
+          try {
+            localStorage.setItem('feedometer_cached_top_stories', JSON.stringify(tier1Stories));
+          } catch (e) {}
+        }
+      } catch (err1) {
+        console.warn('Tier 1 top stories notice:', err1.message);
+      }
+
+      // TIER 2: Background full stream expansion (50 stories)
+      try {
+        let json2 = null;
+        const folderId2 = new URLSearchParams(window.location.search).get('folder_id');
+        const streamOpts2 = { limit: 50 };
+        if (folderId2) streamOpts2.folderId = folderId2;
+        if (window.FeedOmeterAuth && window.FeedOmeterAuth.isAuthenticated() && window.FeedOmeterAuth.getStream) {
+          json2 = await window.FeedOmeterAuth.getStream(streamOpts2);
+        } else if (window.FeedOmeterAuth && window.FeedOmeterAuth.getGuestFollows && window.FeedOmeterAuth.getStream) {
+          const urls2 = window.FeedOmeterAuth.getGuestFollows().map(function (f) { return f.feed_url || f.url; }).filter(Boolean).slice(0, 20);
+          if (urls2.length) {
+            streamOpts2.urls = urls2.join(',');
+            json2 = await window.FeedOmeterAuth.getStream(streamOpts2);
+          }
+        }
+
+        if (json2 && Array.isArray(json2.items) && json2.items.length > 0) {
+          const fullStories = json2.items.map(normalizeStoryItem);
+          const existingIds = new Set(rawStories.map(a => a.id || a.url));
+          let addedCount = 0;
+          fullStories.forEach(item => {
+            const key = item.id || item.url;
+            if (!existingIds.has(key)) {
+              rawStories.push(item);
+              existingIds.add(key);
+              addedCount++;
+            }
+          });
+
+          isInitialLoading = false;
+          if (addedCount > 0 || rawStories.length <= 20) {
+            renderStories();
+            try {
+              localStorage.setItem('feedometer_cached_top_stories', JSON.stringify(rawStories.slice(0, 40)));
+            } catch (e) {}
+          }
+        }
+      } catch (err2) {
+        console.warn('Tier 2 top stories notice:', err2.message);
+      }
+
+      isInitialLoading = false;
+      if (rawStories.length === 0) {
+        renderStories();
+      }
+    }
+
+    function renderStories() {
+      const grid = document.getElementById('stories-grid');
+      const list = rawStories;
+
+      if (list.length === 0) {
+        if (isInitialLoading) {
+          renderSkeletonGrid(15);
+          return;
+        }
+
+        grid.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 3.5rem 1.5rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; margin: 1rem 0;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📡</div>
+            <h3 style="font-family: var(--font-display, 'Quicksand', sans-serif); font-size: 1.3rem; font-weight: 700; color: #0f172a; margin-bottom: 0.4rem;">
+              Updating Top Stories Feed
+            </h3>
+            <p style="font-size: 0.9rem; color: #64748b; max-width: 480px; margin: 0 auto 1.25rem; line-height: 1.5;">
+              Syncing live syndication feeds across top publishers and breaking sources.
+            </p>
+            <div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+              <button class="btn btn-primary" onclick="fetchStories()">🔄 Refresh Stories</button>
+              <button class="btn" onclick="window.parent.loadView && window.parent.loadView('find-feeds.html')">🔍 Discover Sources</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = list.map((a, idx) => {
+        const title = a.title || 'Untitled';
+        const snippet = a.snippet || a.summary || a.description || '';
+        const source = a.sourceTitle || 'Feed';
+        const dateStr = a.published ? new Date(a.published).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+        const mediaHtml = window.FeedImaging 
+          ? window.FeedImaging.renderMedia(a, { className: 'article-card-img', fallbackClass: 'article-card-fallback' })
+          : (a.image ? `<img class="article-card-img" src="${a.image}" alt="" loading="lazy" referrerpolicy="no-referrer" />` : `<div class="article-card-fallback">${source[0]}</div>`);
+
+        return `
+          <div class="article-card">
+            <div class="article-card-media">
+              ${mediaHtml}
+            </div>
+            <div class="article-source-row">
+              <span class="article-source-badge">${source}</span>
+              <span>${dateStr}</span>
+            </div>
+            <a href="javascript:void(0)" class="article-title" onclick="openModal(${idx})">${title}</a>
+            <p class="article-snippet">${snippet}</p>
+            <div class="article-card-actions">
+              <span></span>
+              <a href="${a.url}" target="_blank" rel="noopener noreferrer" class="action-icon-btn" title="Open in New Tab">↗</a>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      if (window.SmartCrop) {
+        window.SmartCrop.applyAll(grid);
+      }
+    }
+
+    function openModal(idx) {
+      const a = rawStories[idx];
+      if (!a) return;
+      document.getElementById('modal-source').textContent = a.sourceTitle || 'Feed Source';
+      document.getElementById('modal-title').textContent = a.title || 'Untitled';
+      document.getElementById('modal-meta').textContent = `Published: ${a.published ? new Date(a.published).toLocaleString() : 'Recent'}`;
+      document.getElementById('modal-content').innerHTML = a.content || a.summary || a.snippet || '<p>No content preview available.</p>';
+      document.getElementById('modal-link').href = a.url || '#';
+      document.getElementById('reader-modal').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('reader-modal').classList.remove('open');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      hydrateFromCache();
+      fetchStories();
+    });
+  </script>
+</body>
+</html>
