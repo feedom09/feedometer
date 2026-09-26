@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visual RSS Studio — FeedOmeter</title>
+  <meta name="description" content="Point-and-click Visual RSS Studio. Load a website, select articles, create a feed.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
+  <link rel="stylesheet" href="styles/feedometer.css">
+  <link rel="stylesheet" href="styles/auth.css">
+  <link rel="stylesheet" href="navbar/navbar.css">
+  <link rel="stylesheet" href="styles/visual-builder.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body class="vb-app">
+
+  <header class="vb-top">
+    <a class="vb-brand" href="home.html">feed<span>O</span>meter</a>
+    <div class="vb-top-actions">
+      <a class="vb-chip" id="vb-nav-auto-builder" href="builder.html">⚡ Auto Feed Generator</a>
+      <a class="vb-chip is-accent" href="visual-builder.html">🎯 Visual Studio</a>
+      <button type="button" id="feedo-navbar-trigger-btn" class="feedo-navbar-compass-btn" title="Menu" aria-label="Open menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <section class="vb-hero">
+    <h1>Visual RSS Studio</h1>
+    <p>Load a website → click articles on the preview → create your feed. Built as a separate studio from Auto Generator.</p>
+    <div class="vb-samples">
+      <button type="button" data-sample="https://www.bbc.com/news">BBC News</button>
+      <button type="button" data-sample="https://techcrunch.com">TechCrunch</button>
+      <button type="button" data-sample="https://www.theverge.com">The Verge</button>
+      <button type="button" data-sample="https://arstechnica.com">Ars Technica</button>
+      <button type="button" data-sample="https://www.sciencedaily.com">ScienceDaily</button>
+    </div>
+  </section>
+
+  <div class="vb-layout">
+    <aside class="vb-card vb-setup-pane">
+      <div class="vb-card-h">Visual RSS Setup</div>
+      <div class="vb-card-b">
+        <span class="vb-label">Pick mode</span>
+        <div class="vb-toggle">
+          <button type="button" data-vb-mode="auto" class="is-on">⚡ Auto Cluster</button>
+          <button type="button" data-vb-mode="manual">🎯 Manual</button>
+        </div>
+
+        <span class="vb-label">Content type</span>
+        <select id="vb-content-type" class="vb-select">
+          <option value="news">News &amp; Media</option>
+          <option value="blog">Blog</option>
+          <option value="ecommerce">E-Commerce</option>
+          <option value="generic">Any page</option>
+        </select>
+
+        <span class="vb-label">Page loading</span>
+        <select id="vb-render-mode" class="vb-select">
+          <option value="auto" selected>Auto</option>
+          <option value="static">HTML only (fast)</option>
+          <option value="browser">Full browser render</option>
+        </select>
+        <p class="vb-hint">Sites with bot protection (Cloudflare/Akamai) work best in Auto mode or via Auto Feed Generator.</p>
+
+        <span class="vb-label">Selectors</span>
+        <div class="vb-field is-active" data-field="container">
+          <div class="vb-field-top"><span>Container</span><span class="vb-bound">—</span></div>
+          <input id="vb-sel-container" placeholder="article, .card, .post" autocomplete="off">
+        </div>
+        <div class="vb-field" data-field="title">
+          <div class="vb-field-top"><span>Title</span><span class="vb-bound">—</span></div>
+          <input id="vb-sel-title" placeholder="h1, h2, h3, a" autocomplete="off">
+        </div>
+        <div class="vb-field" data-field="link">
+          <div class="vb-field-top"><span>Link</span><span class="vb-bound">—</span></div>
+          <input id="vb-sel-link" placeholder="a[href]" autocomplete="off">
+        </div>
+        <div class="vb-field" data-field="description">
+          <div class="vb-field-top"><span>Description</span><span class="vb-bound">—</span></div>
+          <input id="vb-sel-description" placeholder="p, .summary (optional)" autocomplete="off">
+        </div>
+        <div class="vb-field" data-field="image">
+          <div class="vb-field-top"><span>Image</span><span class="vb-bound">—</span></div>
+          <input id="vb-sel-image" placeholder="img, picture (optional)" autocomplete="off">
+        </div>
+        <div class="vb-field" data-field="date">
+          <div class="vb-field-top"><span>Date</span><span class="vb-bound">—</span></div>
+          <input id="vb-sel-date" placeholder="time, .date (optional)" autocomplete="off">
+        </div>
+
+        <div id="vb-matching-box" class="vb-matching-box" hidden>
+          <div class="vb-matching-header">
+            <span>Matching entries (<span id="vb-match-count">0</span>)</span>
+          </div>
+          <ul id="vb-matching-list" class="vb-matching-list"></ul>
+        </div>
+      </div>
+
+      <div class="vb-card-footer">
+        <button type="button" id="vb-create" class="vb-create" disabled>⚡ Create Feed from Selections</button>
+      </div>
+    </aside>
+
+    <section class="vb-card vb-canvas">
+      <div class="vb-toolbar">
+        <div class="vb-url-row">
+          <span aria-hidden="true">🌐</span>
+          <input id="vb-url" type="url" placeholder="https://www.bbc.com/news" autocomplete="off">
+          <button type="button" id="vb-load" class="vb-load">Load Website</button>
+        </div>
+        <span id="vb-badge" class="vb-badge" hidden></span>
+      </div>
+      <div id="vb-iframe-wrap" class="vb-frame-wrap">
+        <iframe id="vb-iframe" title="Website preview" src="about:blank" sandbox="allow-same-origin allow-scripts allow-forms" referrerpolicy="no-referrer"></iframe>
+      </div>
+      <p id="vb-status" class="vb-status">Paste a website URL and click <strong>Load Website</strong>.</p>
+    </section>
+  </div>
+
+  <section id="vb-result" class="vb-result" hidden>
+    <div class="vb-result-header">
+      <div>
+        <h2>🎉 Live RSS Feed Generated!</h2>
+        <p class="vb-result-subtext">Your customized RSS feed is active and ready for syndication.</p>
+      </div>
+      <span class="vb-result-badge">Active XML 2.0</span>
+    </div>
+    <div class="vb-result-url-wrap">
+      <input id="vb-feed-url" readonly title="Live RSS feed URL">
+    </div>
+    <div class="vb-result-actions">
+      <button type="button" data-copy-feed class="vb-chip is-accent">📋 Copy Live Feed URL</button>
+      <button type="button" id="vb-btn-follow" class="vb-chip vb-btn-follow"><span>+ Follow Feed</span> <span class="follow-heart-icon">💖</span></button>
+      <a href="#" id="vb-btn-widget-studio" class="vb-chip" target="_blank" rel="noopener noreferrer">🎨 Open in Widget Studio ➔</a>
+      <a href="reader.html" id="vb-btn-reader" class="vb-chip" target="_blank" rel="noopener noreferrer">📖 Open in Reader</a>
+    </div>
+
+    <!-- Live Extracted Articles Grid -->
+    <div class="vb-preview-section">
+      <h3 class="vb-preview-title">Extracted Articles Preview</h3>
+      <div id="vb-articles-grid" class="vb-articles-grid"></div>
+    </div>
+
+    <details class="vb-xml-details">
+      <summary>View Generated RSS 2.0 XML</summary>
+      <pre id="vb-feed-xml"></pre>
+    </details>
+  </section>
+
+  <div id="vb-toast" class="vb-toast"></div>
+
+  <div id="feedo-nav-backdrop" class="feedo-nav-backdrop"></div>
+  <aside id="feedo-nav-drawer" class="feedo-nav-drawer">
+    <div class="nav-drawer-header">
+      <div class="nav-drawer-user-info">
+        <div class="nav-drawer-user-badge">
+          <div id="feedo-nav-user-avatar" class="nav-drawer-avatar">G</div>
+          <span id="feedo-nav-user-email" class="nav-drawer-email">Guest</span>
+        </div>
+        <button id="feedo-nav-close-btn" class="nav-drawer-close-btn" type="button">✕</button>
+      </div>
+      <div class="nav-drawer-tabs">
+        <button class="nav-drawer-tab-btn active" type="button" data-nav-tab="navigator"><span>☰</span> Menu</button>
+        <button class="nav-drawer-tab-btn" type="button" data-nav-tab="favorites"><span>⭐</span> Favorites</button>
+        <button class="nav-drawer-tab-btn" type="button" data-nav-tab="recents"><span>🕒</span> Recents</button>
+      </div>
+    </div>
+    <div id="feedo-nav-drawer-body" class="nav-drawer-body"></div>
+    <div class="nav-drawer-footer">
+      <button id="feedo-signout-btn" class="nav-drawer-signout-btn" type="button"><span>🚪</span> Sign Out</button>
+    </div>
+  </aside>
+
+  <script src="scripts/feedometer-config.js"></script>
+  <script src="scripts/feedometer-auth.js"></script>
+  <script src="navbar/navbar.js"></script>
+  <!-- Versioned controller URL prevents an existing Shell iframe from reusing
+       a browser-cached controller after a Visual Builder behavior release. -->
+  <script src="scripts/visual-builder-studio.js?v=worker-proxy-v2"></script>
+</body>
+</html>

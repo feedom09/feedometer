@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feed Search | FeedOmeter</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/feedometer.css" />
+  <link rel="stylesheet" href="styles/feed-search.css?v=layout-3" />
+</head>
+<body class="h-screen overflow-hidden flex flex-col bg-slate-50">
+  <div class="flex flex-1 overflow-hidden">
+    <aside class="w-64 sidebar-gradient flex flex-col shrink-0">
+      <div class="p-4 border-b border-black/5">
+        <h2 class="text-sm font-bold tracking-wide uppercase text-slate-800">Feed Search</h2>
+        <p class="text-xs text-slate-600 mt-1">Find sources, preview, follow</p>
+      </div>
+
+      <nav class="flex-1 overflow-y-auto p-3 space-y-1" id="sidebar-nav">
+        <button type="button" class="nav-item nav-item-active w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between gap-2" data-view="trending">
+          <span>🔥 Trending</span>
+          <span class="text-xs opacity-70" data-count="trending">—</span>
+        </button>
+        <button type="button" class="nav-item nav-item-inactive w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between gap-2" data-view="ai">
+          <span>🤖 AI</span>
+          <span class="text-xs opacity-70" data-count="ai">—</span>
+        </button>
+        <button type="button" class="nav-item nav-item-inactive w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between gap-2" data-view="markets">
+          <span>💰 Markets</span>
+          <span class="text-xs opacity-70" data-count="markets">—</span>
+        </button>
+        <button type="button" class="nav-item nav-item-inactive w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between gap-2" data-view="world">
+          <span>🌍 World</span>
+          <span class="text-xs opacity-70" data-count="world">—</span>
+        </button>
+        <button type="button" class="nav-item nav-item-inactive w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between gap-2" data-view="space">
+          <span>🚀 Space</span>
+          <span class="text-xs opacity-70" data-count="space">—</span>
+        </button>
+        <button type="button" class="nav-item nav-item-inactive w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between gap-2" data-view="gaming">
+          <span>🎮 Gaming</span>
+          <span class="text-xs opacity-70" data-count="gaming">—</span>
+        </button>
+        <button type="button" class="nav-item nav-item-inactive w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between gap-2" data-view="ws-ai-hardware">
+          <span>⚡ AI Hardware</span>
+          <span class="text-xs opacity-70" data-count="ws-ai-hardware">—</span>
+        </button>
+        <button type="button" class="nav-item nav-item-inactive w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between gap-2" data-view="ws-space-exp">
+          <span>🚀 Space Exp</span>
+          <span class="text-xs opacity-70" data-count="ws-space-exp">—</span>
+        </button>
+        <button type="button" class="nav-item nav-item-inactive w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between gap-2" data-view="ws-agents">
+          <span>🤖 Agents</span>
+          <span class="text-xs opacity-70" data-count="ws-agents">—</span>
+        </button>
+        <button type="button" class="nav-item nav-item-inactive w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between gap-2" data-view="alert-openai">
+          <span>OpenAI</span>
+          <span class="text-xs opacity-70" data-count="alert-openai">—</span>
+        </button>
+        <button type="button" class="nav-item nav-item-inactive w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between gap-2" data-view="alert-nvidia">
+          <span>Nvidia</span>
+          <span class="text-xs opacity-70" data-count="alert-nvidia">—</span>
+        </button>
+        <button type="button" class="nav-item nav-item-inactive w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between gap-2" data-view="alert-cloudflare">
+          <span>Cloudflare</span>
+          <span class="text-xs opacity-70" data-count="alert-cloudflare">—</span>
+        </button>
+      </nav>
+    </aside>
+
+    <main class="fs-main-pane flex-1 overflow-y-auto">
+      <div class="fs-main-inner">
+        <header class="fs-context-header">
+          <h2 id="context-title" class="fs-context-title">
+            <span id="context-icon">🔥</span>
+            <span id="context-label">Trending</span>
+          </h2>
+          <p id="context-subtitle" class="fs-context-subtitle">Discover popular RSS feeds across the web</p>
+        </header>
+
+        <form id="search-form" class="flex gap-2 mb-4">
+          <input
+            id="search-input"
+            type="search"
+            autocomplete="off"
+            placeholder="Search feeds by topic, site, or keyword…"
+            class="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+          />
+          <button type="submit" class="rounded-xl bg-slate-900 text-white px-5 py-2.5 text-sm font-semibold hover:bg-slate-800">
+            Search
+          </button>
+        </form>
+
+        <div class="flex flex-wrap items-center gap-2 mb-3">
+          <select id="filter-sort" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700">
+            <option value="relevance">Relevance</option>
+            <option value="popularity">Most subscribers</option>
+            <option value="velocity">Most posts</option>
+            <option value="freshness">Recently updated</option>
+          </select>
+          <select id="filter-lang" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700">
+            <option value="all">Any language</option>
+            <option value="en">English</option>
+            <option value="es">Spanish</option>
+            <option value="fr">French</option>
+            <option value="de">German</option>
+          </select>
+        </div>
+
+        <div id="related-chips" class="flex flex-wrap gap-2 mb-4"></div>
+        <div id="status-line" class="text-sm text-slate-500 mb-4">Search to discover RSS feeds</div>
+        <div id="results-grid" class="sources-cards-grid"></div>
+        <div id="empty-state" class="hidden text-center py-16 text-slate-500 text-sm">
+          No feeds found. Try a broader topic or different keywords.
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- RSS FEED READER LIVE OUTPUT WINDOW (same as find-feeds) -->
+  <div id="preview-modal" class="preview-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="feed-title">
+    <div class="preview-modal-container">
+      <div class="reader-toolbar">
+        <div class="reader-toolbar-left">
+          <button id="reader-back-btn" class="reader-back-btn" title="Back" style="display: none;">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            <span class="back-btn-text">Back</span>
+          </button>
+          <div class="feed-search-capsule">
+            <svg class="search-mini-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="feed-search-input" placeholder="Search headlines..." class="feed-search-input">
+          </div>
+        </div>
+
+        <div class="reader-toolbar-center">
+          <h2 id="feed-title" class="feed-toolbar-title">Top Stories</h2>
+          <span id="feed-count-badge" class="feed-stories-badge">0 stories</span>
+        </div>
+
+        <div class="reader-toolbar-right">
+          <div class="view-toggle-group">
+            <button id="view-list-btn" class="view-toggle-btn active" title="List View">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+            </button>
+            <button id="view-grid-btn" class="view-toggle-btn" title="Grid View">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect></svg>
+            </button>
+          </div>
+          <button id="preview-modal-close" class="modal-close-btn-circle" title="Close Output Window (Esc)" aria-label="Close Output Window">
+            &times;
+          </button>
+        </div>
+      </div>
+
+      <div class="reader-body" style="overflow-y: auto; max-height: calc(90vh - 72px); padding: 1.25rem 1.5rem; flex: 1;">
+        <div id="preview-loading-spinner" class="loading-status-wrap" style="display: none;">
+          <div class="loading-spinner-inner">
+            <svg class="loading-spin-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle class="loading-spin-track" cx="12" cy="12" r="10" stroke="#e2e8f0" stroke-width="2.5"></circle>
+              <path class="loading-spin-arc" d="M12 2a10 10 0 0 1 10 10" stroke="#111827" stroke-width="2.5" stroke-linecap="round"></path>
+            </svg>
+            <span class="loading-status-text">Fetching and parsing feed stream...</span>
+          </div>
+        </div>
+        <div id="preview-error-container" style="display: none; margin: 1rem 0;"></div>
+        <div id="cards-container" class="cards-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="fs-toast" class="fs-toast" aria-live="polite"></div>
+
+  <script src="scripts/feedometer-config.js"></script>
+  <script src="scripts/feedometer-auth.js"></script>
+  <script src="scripts/feedometer-feed-search.js?v=articles-9"></script>
+</body>
+</html>

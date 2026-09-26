@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings & Identity — FeedOmeter 2.1</title>
+  
+  <link rel="stylesheet" href="styles/feedometer.css">
+  <link rel="stylesheet" href="styles/settings-modal.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22><text y=%2222%22 font-size=%2222%22>⚙️</text></svg>">
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: radial-gradient(circle at 10% 20%, #1e3a8a 0%, #0f172a 90%);
+      font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    /* Standalone modal always visible */
+    .feedo-settings-modal {
+      transform: scale(1) translateY(0);
+      box-shadow: 0 30px 80px -15px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.15);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── MASTER PAAY-STYLE MODAL CONTAINER ── -->
+  <div class="feedo-settings-modal">
+    
+    <!-- ── LEFT SAPPHIRE SIDEBAR ── -->
+    <aside class="settings-sidebar">
+      <div>
+        <div class="settings-sidebar-brand">
+          <span class="settings-sidebar-logo">📡</span>
+          <span class="settings-sidebar-title">FeedOmeter</span>
+          <span class="settings-sidebar-badge">2.1 Live</span>
+        </div>
+
+        <div class="settings-nav-group-title">Settings</div>
+        <nav class="settings-nav-list">
+          <button class="settings-nav-item active" data-tab="profile">
+            <span>👤</span>
+            <span>Personal Information</span>
+          </button>
+          <button class="settings-nav-item" data-tab="security">
+            <span>🔒</span>
+            <span>Account & Security</span>
+          </button>
+          <button class="settings-nav-item" data-tab="providers">
+            <span>🔗</span>
+            <span>Connected Accounts</span>
+          </button>
+          <button class="settings-nav-item" data-tab="devices">
+            <span>📱</span>
+            <span>Active Devices</span>
+          </button>
+          <button class="settings-nav-item" data-tab="preferences">
+            <span>🎛️</span>
+            <span>Reading Preferences</span>
+          </button>
+          <button class="settings-nav-item danger-item" data-tab="danger">
+            <span>⚠️</span>
+            <span>Danger Zone</span>
+          </button>
+        </nav>
+      </div>
+
+      <div class="settings-sidebar-footer">
+        <span>FeedOmeter Enterprise</span>
+        <button onclick="window.location.href='home.html'" style="background:none;border:none;color:white;cursor:pointer;font-weight:600;text-decoration:underline;">← Dashboard</button>
+      </div>
+    </aside>
+
+    <!-- ── RIGHT CONTENT VIEWPORT ── -->
+    <main class="settings-main">
+      
+      <!-- Topbar Header -->
+      <header class="settings-topbar">
+        <div class="settings-breadcrumb">
+          <span>General</span>
+          <span>/</span>
+          <strong id="breadcrumb-title">Personal Information</strong>
+        </div>
+        <button class="settings-close-btn" onclick="window.location.href='home.html'" title="Close Settings">✕</button>
+      </header>
+
+      <!-- Scrollable Tab Views Body -->
+      <div class="settings-scroll-body">
+
+        <!-- ── TAB 1: PERSONAL INFORMATION (PAAY 2-COLUMN HERO) ── -->
+        <section id="view-profile" class="settings-tab-view active">
+          <div class="profile-paay-grid">
+            
+            <!-- Left Hero Card -->
+            <div class="profile-hero-card">
+              <div class="profile-hero-avatar-wrap">
+                <div id="hero-avatar" class="profile-hero-avatar">U</div>
+              </div>
+              <h2 id="hero-name" class="profile-hero-name">Loading...</h2>
+              <div class="profile-hero-role">FeedOmeter Member</div>
+
+              <div class="profile-progress-box">
+                <div class="profile-progress-label">
+                  <span>Profile Identity</span>
+                  <span style="color:#2563eb;">100% Verified</span>
+                </div>
+                <div class="profile-progress-bar">
+                  <div class="profile-progress-fill"></div>
+                </div>
+              </div>
+
+              <div class="profile-hero-meta-list">
+                <div class="profile-hero-meta-item">
+                  <span class="profile-hero-meta-label">Primary Email</span>
+                  <span id="hero-email" class="profile-hero-meta-value">user@feedometer.com</span>
+                </div>
+                <div class="profile-hero-meta-item">
+                  <span class="profile-hero-meta-label">Account ID</span>
+                  <span id="hero-uid" class="profile-hero-meta-value" style="font-family:monospace;font-size:0.75rem;">u_...</span>
+                </div>
+                <div class="profile-hero-meta-item">
+                  <span class="profile-hero-meta-label">Identity Anchor</span>
+                  <span style="color:#16a34a;font-weight:700;">Google OAuth Verified</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Detail Tables -->
+            <div>
+              
+              <!-- Personal Details Card -->
+              <div class="settings-section-card">
+                <div class="settings-section-title">
+                  <span>Personal Details</span>
+                  <button type="submit" form="form-profile" class="paay-btn-primary">Save Changes</button>
+                </div>
+
+                <form id="form-profile" class="paay-data-table">
+                  <div class="paay-data-row">
+                    <span class="paay-data-label">First Name</span>
+                    <input id="input-first-name" type="text" class="paay-input" placeholder="First Name">
+                  </div>
+                  <div class="paay-data-row">
+                    <span class="paay-data-label">Last Name</span>
+                    <input id="input-last-name" type="text" class="paay-input" placeholder="Last Name">
+                  </div>
+                  <div class="paay-data-row">
+                    <span class="paay-data-label">Display Name</span>
+                    <input id="input-display-name" type="text" class="paay-input" placeholder="Display Name">
+                  </div>
+                  <div class="paay-data-row">
+                    <span class="paay-data-label">Date of Birth</span>
+                    <div style="display:flex;align-items:center;gap:0.5rem;justify-content:flex-end;width:100%;">
+                      <input id="input-dob" type="date" class="paay-input" style="max-width:160px;">
+                      <span id="badge-dob" style="font-size:0.72rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:999px;background:#fef3c7;color:#92400e;">Editable Once</span>
+                    </div>
+                  </div>
+                  <div class="paay-data-row">
+                    <span class="paay-data-label">Custom Avatar URL</span>
+                    <input id="input-avatar-url" type="url" class="paay-input" placeholder="https://lh3.googleusercontent.com/...">
+                  </div>
+                </form>
+              </div>
+
+              <!-- Account Information Card (Paay-Style) -->
+              <div class="settings-section-card">
+                <div class="settings-section-title">
+                  <span>Account Information</span>
+                </div>
+
+                <div class="paay-data-table">
+                  <div class="paay-data-row">
+                    <span class="paay-data-label">Account Email</span>
+                    <span id="val-email" class="paay-data-value">user@feedometer.com</span>
+                  </div>
+                  <div class="paay-data-row">
+                    <span class="paay-data-label">Email Status</span>
+                    <span class="paay-data-value" style="color:#16a34a;">Verified ✓</span>
+                  </div>
+                  <div class="paay-data-row">
+                    <span class="paay-data-label">Auth Provider</span>
+                    <span id="val-auth-provider" class="paay-data-value">Google OAuth 2.0</span>
+                  </div>
+                  <div class="paay-data-row">
+                    <span class="paay-data-label">Account Status</span>
+                    <span class="paay-data-value" style="color:#16a34a;">Active</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ── TAB 2: ACCOUNT & SECURITY ── -->
+        <section id="view-security" class="settings-tab-view">
+          <div class="settings-section-card">
+            <div class="settings-section-title">
+              <span>Password & Authentication</span>
+            </div>
+
+            <p style="font-size:0.85rem;color:#64748b;margin-bottom:1.25rem;">
+              Protect your account with high-entropy PBKDF2 encryption. Changing your password will automatically invalidate all other active sessions.
+            </p>
+
+            <form id="form-password" style="display:flex;flex-direction:column;gap:1rem;max-width:480px;">
+              <div>
+                <label style="display:block;font-size:0.8rem;font-weight:600;color:#475569;margin-bottom:0.35rem;">Current Password (if set)</label>
+                <input id="input-current-pass" type="password" class="paay-input" style="max-width:100%;width:100%;" placeholder="••••••••">
+              </div>
+              <div>
+                <label style="display:block;font-size:0.8rem;font-weight:600;color:#475569;margin-bottom:0.35rem;">New Password (min 8 chars)</label>
+                <input id="input-new-pass" type="password" required minlength="8" class="paay-input" style="max-width:100%;width:100%;" placeholder="••••••••">
+              </div>
+              <div>
+                <label style="display:block;font-size:0.8rem;font-weight:600;color:#475569;margin-bottom:0.35rem;">Confirm New Password</label>
+                <input id="input-confirm-pass" type="password" required minlength="8" class="paay-input" style="max-width:100%;width:100%;" placeholder="••••••••">
+              </div>
+              <div style="margin-top:0.5rem;">
+                <button type="submit" class="paay-btn-primary">Update Password</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- ── TAB 3: CONNECTED ACCOUNTS ── -->
+        <section id="view-providers" class="settings-tab-view">
+          <div class="settings-section-card">
+            <div class="settings-section-title">
+              <span>Pluggable Identity Providers</span>
+            </div>
+
+            <div id="providers-container">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </section>
+
+        <!-- ── TAB 4: ACTIVE DEVICES & SESSIONS ── -->
+        <section id="view-devices" class="settings-tab-view">
+          <div class="settings-section-card">
+            <div class="settings-section-title">
+              <span>Active Devices & Sessions</span>
+              <button class="paay-btn-secondary" style="color:#dc2626;border-color:#fca5a5;" onclick="revokeOtherSessions()">Revoke All Other Sessions</button>
+            </div>
+
+            <p style="font-size:0.85rem;color:#64748b;margin-bottom:1.25rem;">
+              These devices are currently authenticated to your FeedOmeter account.
+            </p>
+
+            <div id="sessions-container" style="display:flex;flex-direction:column;gap:0.75rem;">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </section>
+
+        <!-- ── TAB 5: READING PREFERENCES ── -->
+        <section id="view-preferences" class="settings-tab-view">
+          <div class="settings-section-card">
+            <div class="settings-section-title">
+              <span>Display & Reading Experience</span>
+              <button type="submit" form="form-preferences" class="paay-btn-primary">Save Preferences</button>
+            </div>
+
+            <form id="form-preferences" class="paay-data-table">
+              <div class="paay-data-row">
+                <span class="paay-data-label">Theme Mode</span>
+                <select id="pref-theme" class="paay-input">
+                  <option value="system">System Default (Automatic)</option>
+                  <option value="light">Light Theme</option>
+                  <option value="dark">Dark Theme</option>
+                </select>
+              </div>
+
+              <div class="paay-data-row">
+                <span class="paay-data-label">Reading Layout</span>
+                <select id="pref-reading-mode" class="paay-input">
+                  <option value="cards">Visual Card Grid</option>
+                  <option value="split">2-Pane Split Reader</option>
+                  <option value="compact">Compact Headlines</option>
+                </select>
+              </div>
+
+              <div class="paay-data-row">
+                <span class="paay-data-label">Default Launch View</span>
+                <select id="pref-default-view" class="paay-input">
+                  <option value="home">Dashboard Briefing</option>
+                  <option value="top-stories">Top Stories Live Stream</option>
+                  <option value="starred">Starred Articles</option>
+                </select>
+              </div>
+
+              <div class="paay-data-row">
+                <span class="paay-data-label">Auto-mark Read</span>
+                <label class="paay-switch">
+                  <input id="pref-auto-mark-read" type="checkbox">
+                  <span class="paay-slider"></span>
+                </label>
+              </div>
+
+              <div class="paay-data-row">
+                <span class="paay-data-label">Email Intelligence Digest</span>
+                <label class="paay-switch">
+                  <input id="pref-email-notifications" type="checkbox">
+                  <span class="paay-slider"></span>
+                </label>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- ── TAB 6: DANGER ZONE ── -->
+        <section id="view-danger" class="settings-tab-view">
+          <div class="settings-section-card" style="border-color:#fca5a5;background:#fff5f5;">
+            <div class="settings-section-title" style="color:#dc2626;">
+              <span>Delete Account & Erase All Feeds</span>
+            </div>
+
+            <p style="font-size:0.85rem;color:#7f1d1d;margin-bottom:1.25rem;">
+              Permanently delete your user account, starred stories, folder hierarchies, and reading history. This action is irreversible.
+            </p>
+
+            <button class="paay-btn-primary" style="background:#dc2626;" onclick="confirmDeleteAccount()">Delete Account Permanently</button>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Toast Alert -->
+  <div id="toast" style="position:fixed;bottom:24px;right:24px;padding:0.75rem 1.25rem;background:#0f172a;color:#fff;border-radius:12px;font-size:0.88rem;font-weight:600;display:none;z-index:10000;box-shadow:0 10px 25px rgba(0,0,0,0.25);">
+    Settings saved
+  </div>
+
+  <script src="scripts/feedometer-config.js"></script>
+  <script src="scripts/feedometer-auth.js"></script>
+
+  <script>
+    var currentUser = null;
+
+    function showToast(msg, isError) {
+      var t = document.getElementById('toast');
+      if (!t) return;
+      t.textContent = msg;
+      t.style.background = isError ? '#dc2626' : '#16a34a';
+      t.style.display = 'block';
+      setTimeout(function() { t.style.display = 'none'; }, 3500);
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.settings-nav-item').forEach(function(btn) {
+        btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
+      });
+      document.querySelectorAll('.settings-tab-view').forEach(function(view) {
+        view.classList.toggle('active', view.id === 'view-' + tabId);
+      });
+
+      var titleMap = {
+        'profile': 'Personal Information',
+        'security': 'Account & Security',
+        'providers': 'Connected Accounts',
+        'devices': 'Active Devices & Sessions',
+        'preferences': 'Reading Preferences',
+        'danger': 'Danger Zone'
+      };
+      var breadcrumb = document.getElementById('breadcrumb-title');
+      if (breadcrumb) breadcrumb.textContent = titleMap[tabId] || 'Personal Information';
+    }
+
+    async function loadUserData() {
+      if (!window.FeedOmeterAuth || !window.FeedOmeterAuth.isAuthenticated()) {
+        window.location.href = 'shell.html';
+        return;
+      }
+
+      currentUser = await window.FeedOmeterAuth.checkSession();
+      if (!currentUser) return;
+
+      // Populate Hero Card
+      var name = currentUser.display_name || currentUser.first_name || currentUser.name || 'User';
+      var email = currentUser.email || '';
+      var pic = currentUser.avatar_url || currentUser.picture || '';
+      var initial = (name || email || 'U')[0].toUpperCase();
+
+      document.getElementById('hero-name').textContent = name;
+      document.getElementById('hero-email').textContent = email;
+      document.getElementById('hero-uid').textContent = currentUser.id || 'u_active';
+      document.getElementById('val-email').textContent = email;
+
+      var heroAvatar = document.getElementById('hero-avatar');
+      if (heroAvatar) {
+        if (pic) {
+          heroAvatar.innerHTML = '<img src="' + pic + '" referrerpolicy="no-referrer" alt="' + name + '" onerror="this.parentElement.textContent=\'' + initial + '\';" />';
+        } else {
+          heroAvatar.textContent = initial;
+        }
+      }
+
+      // Populate Inputs
+      document.getElementById('input-first-name').value = currentUser.first_name || '';
+      document.getElementById('input-last-name').value = currentUser.last_name || '';
+      document.getElementById('input-display-name').value = currentUser.display_name || '';
+      document.getElementById('input-dob').value = currentUser.dob || '';
+      document.getElementById('input-avatar-url').value = pic;
+
+      // DOB Lock Check
+      var dobInput = document.getElementById('input-dob');
+      var dobBadge = document.getElementById('badge-dob');
+      if (currentUser.dob_locked === 1 && currentUser.dob) {
+        dobInput.disabled = true;
+        dobBadge.style.background = '#dcfce7';
+        dobBadge.style.color = '#166534';
+        dobBadge.textContent = 'Locked & Verified ✓';
+      }
+
+      // Populate Providers
+      renderProviders(currentUser.providers || []);
+
+      // Populate Sessions
+      loadSessions();
+
+      // Populate Preferences
+      loadPreferences();
+    }
+
+    function renderProviders(providers) {
+      var container = document.getElementById('providers-container');
+      if (!container) return;
+
+      var html = '';
+      if (!providers || providers.length === 0) {
+        html = '<div style="padding:1rem;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:0.75rem;"><span style="font-size:1.5rem;">🔑</span><div><div style="font-weight:700;">Password Login</div><div style="font-size:0.75rem;color:#64748b;">Primary credential</div></div></div><span style="font-size:0.75rem;font-weight:700;color:#16a34a;background:#dcfce7;padding:0.2rem 0.5rem;border-radius:999px;">ACTIVE</span></div>';
+      } else {
+        providers.forEach(function(p) {
+          var isGoogle = p.provider === 'google';
+          html += '<div style="padding:1rem;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;"><div style="display:flex;align-items:center;gap:0.75rem;">';
+          if (isGoogle) {
+            html += '<svg width="24" height="24" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>';
+          } else {
+            html += '<span>🔑</span>';
+          }
+          html += '<div><div style="font-weight:700;text-transform:capitalize;">' + p.provider + ' OAuth Account</div><div style="font-size:0.75rem;color:#64748b;">Linked to ' + (p.provider_email || currentUser.email) + '</div></div></div><span style="font-size:0.75rem;font-weight:700;color:#16a34a;background:#dcfce7;padding:0.2rem 0.5rem;border-radius:999px;">CONNECTED ✓</span></div>';
+        });
+      }
+      container.innerHTML = html;
+    }
+
+    async function loadSessions() {
+      var container = document.getElementById('sessions-container');
+      if (!container) return;
+
+      try {
+        var sessions = await window.FeedOmeterAuth.getSessions();
+        if (!sessions || sessions.length === 0) {
+          container.innerHTML = '<div style="padding:1rem;color:#64748b;">No active sessions found.</div>';
+          return;
+        }
+
+        var html = '';
+        sessions.forEach(function(s) {
+          var isMobile = /mobile|phone|ios|android/i.test(s.device_name || s.user_agent);
+          var icon = isMobile ? '📱' : '💻';
+          var lastActive = new Date(s.last_seen || s.created_at).toLocaleString();
+
+          html += '<div style="padding:0.85rem 1rem;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;">';
+          html += '<div style="display:flex;align-items:center;gap:0.75rem;"><span style="font-size:1.4rem;">' + icon + '</span><div><div style="font-weight:700;font-size:0.88rem;">' + (s.device_name || 'Web Browser');
+          if (s.is_current) {
+            html += ' <span style="font-size:0.68rem;font-weight:700;padding:0.15rem 0.4rem;border-radius:999px;background:#dcfce7;color:#166534;margin-left:0.35rem;">THIS DEVICE</span>';
+          }
+          html += '</div><div style="font-size:0.75rem;color:#64748b;">IP: ' + (s.ip_address || 'Unknown') + ' • ' + lastActive + '</div></div></div>';
+          html += '<div>';
+          if (!s.is_current) {
+            html += '<button onclick="revokeSession(\'' + s.id + '\')" style="padding:0.35rem 0.75rem;border:1px solid #fca5a5;background:#fff;color:#dc2626;border-radius:8px;font-size:0.75rem;font-weight:700;cursor:pointer;">Revoke</button>';
+          } else {
+            html += '<span style="font-size:0.75rem;color:#16a34a;font-weight:700;">Active Now</span>';
+          }
+          html += '</div></div>';
+        });
+
+        container.innerHTML = html;
+      } catch (err) {
+        container.innerHTML = '<div style="color:#dc2626;padding:1rem;">Failed to load sessions</div>';
+      }
+    }
+
+    async function revokeSession(id) {
+      if (!confirm('Revoke this session?')) return;
+      try {
+        await window.FeedOmeterAuth.revokeSession(id);
+        showToast('Session revoked');
+        loadSessions();
+      } catch (e) {
+        showToast(e.message, true);
+      }
+    }
+
+    async function revokeOtherSessions() {
+      if (!confirm('Revoke all other active sessions?')) return;
+      try {
+        await window.FeedOmeterAuth.revokeOtherSessions();
+        showToast('All other sessions revoked');
+        loadSessions();
+      } catch (e) {
+        showToast(e.message, true);
+      }
+    }
+
+    async function loadPreferences() {
+      try {
+        var prefs = await window.FeedOmeterAuth.getPreferences();
+        if (prefs) {
+          if (prefs.theme) document.getElementById('pref-theme').value = prefs.theme;
+          if (prefs.reading_mode) document.getElementById('pref-reading-mode').value = prefs.reading_mode;
+          if (prefs.default_view) document.getElementById('pref-default-view').value = prefs.default_view;
+          document.getElementById('pref-auto-mark-read').checked = Boolean(prefs.auto_mark_read);
+          document.getElementById('pref-email-notifications').checked = Boolean(prefs.email_notifications !== 0);
+        }
+      } catch (e) {}
+    }
+
+    function confirmDeleteAccount() {
+      var email = prompt('To permanently delete your account, please type your email address below:');
+      if (!email || !currentUser || email.toLowerCase() !== currentUser.email.toLowerCase()) {
+        alert('Email did not match.');
+        return;
+      }
+      window.FeedOmeterAuth.deleteAccount(email).then(function () {
+        window.location.href = 'shell.html';
+      }).catch(function (err) {
+        alert(err.message || 'Could not delete account');
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.settings-nav-item').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          switchTab(btn.getAttribute('data-tab'));
+        });
+      });
+
+      var params = new URLSearchParams(window.location.search);
+      var tab = params.get('tab');
+      if (tab) switchTab(tab);
+
+      loadUserData();
+
+      // Form Submits
+      document.getElementById('form-profile').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        try {
+          var payload = {
+            first_name: document.getElementById('input-first-name').value.trim(),
+            last_name: document.getElementById('input-last-name').value.trim(),
+            display_name: document.getElementById('input-display-name').value.trim(),
+            avatar_url: document.getElementById('input-avatar-url').value.trim()
+          };
+          var dobVal = document.getElementById('input-dob').value;
+          if (dobVal && (!currentUser.dob || currentUser.dob_locked !== 1)) {
+            payload.dob = dobVal;
+          }
+          await window.FeedOmeterAuth.updateProfile(payload);
+          showToast('Profile changes saved successfully');
+          loadUserData();
+        } catch (err) {
+          showToast(err.message, true);
+        }
+      });
+
+      document.getElementById('form-password').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var cur = document.getElementById('input-current-pass').value;
+        var p1 = document.getElementById('input-new-pass').value;
+        var p2 = document.getElementById('input-confirm-pass').value;
+        if (p1 !== p2) {
+          showToast('New passwords do not match', true);
+          return;
+        }
+        try {
+          var result = await window.FeedOmeterAuth.changePassword(cur, p1);
+          showToast(result.notification && !result.notification.sent
+            ? 'Password changed, but the security email could not be sent (' + result.notification.code + ').'
+            : 'Password updated successfully. A security email was sent.');
+          document.getElementById('form-password').reset();
+          loadSessions();
+        } catch (err) {
+          showToast(err.message, true);
+        }
+      });
+
+      document.getElementById('form-preferences').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        try {
+          await window.FeedOmeterAuth.updatePreferences({
+            theme: document.getElementById('pref-theme').value,
+            reading_mode: document.getElementById('pref-reading-mode').value,
+            default_view: document.getElementById('pref-default-view').value,
+            auto_mark_read: document.getElementById('pref-auto-mark-read').checked ? 1 : 0,
+            email_notifications: document.getElementById('pref-email-notifications').checked ? 1 : 0
+          });
+          showToast('Preferences saved');
+        } catch (err) {
+          showToast(err.message, true);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
