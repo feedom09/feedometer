@@ -1,0 +1,2 @@
+const query = require('./query'); const normalizer = require('./normalizer'); const topicGraph = require('./topicGraph'); const sqlRepository = require('./sqlDiscoveryRepository'); const rssDiscovery = require('./rssDiscoveryEngine'); const progressive = require('./progressiveFeedDiscovery');
+module.exports = { ...query, ...normalizer, ...topicGraph, ...rssDiscovery, ...progressive, sqlRepository };
