@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FeedOmeter 2.1 — Personal Reader & Feed Intelligence</title>
+  
+  <!-- Typography (Matching Search Page) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Master Design System & Reader Styles -->
+  <link rel="stylesheet" href="styles/feedometer.css">
+  <link rel="stylesheet" href="styles/auth.css">
+  <link rel="stylesheet" href="styles/feedometer-reader.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22><text y=%2222%22 font-size=%2222%22>📡</text></svg>">
+</head>
+<body>
+
+  <!-- 2-Pane Master Grid Container -->
+  <div class="reader-grid-container">
+
+    <!-- ── PANE 1: SIDEBAR (Matching #97d9ff Search Page Sidebar) ── -->
+    <aside id="reader-sidebar-pane" class="reader-sidebar-pane">
+      
+      <!-- Page brand header (matches Feed Search sidebar header) -->
+      <div class="sidebar-page-brand">
+        <h2 class="sidebar-page-title">One Stop Reader</h2>
+        <p class="sidebar-page-subtitle">Unified stream, starred &amp; read later</p>
+      </div>
+
+      <!-- Navigation & Folders Scroll -->
+      <div class="sidebar-scroll-area">
+        
+        <!-- Section 1: STREAMS -->
+        <div class="sidebar-nav-section-title">
+          <span>Streams</span>
+          <span class="section-subtext">live feed</span>
+        </div>
+        <div class="sidebar-nav-item active" data-nav-tab="all">
+          <div class="nav-icon-label">
+            <span>📰</span>
+            <span>All Feeds</span>
+          </div>
+          <span class="nav-badge" id="badge-all-count">live</span>
+        </div>
+        <div class="sidebar-nav-item" data-nav-tab="starred">
+          <div class="nav-icon-label">
+            <span>⭐</span>
+            <span>Starred</span>
+          </div>
+          <span class="nav-badge" id="badge-starred-count">0</span>
+        </div>
+        <div class="sidebar-nav-item" data-nav-tab="saved">
+          <div class="nav-icon-label">
+            <span>⏳</span>
+            <span>Read Later</span>
+          </div>
+          <span class="nav-badge" id="badge-saved-count">0</span>
+        </div>
+        <div class="sidebar-nav-item" data-nav-tab="rss-reader">
+          <div class="nav-icon-label">
+            <span>📡</span>
+            <span>RSS Feed Reader</span>
+          </div>
+          <span class="nav-badge" id="badge-rss-reader-count">instant</span>
+        </div>
+
+        <!-- Section 2: FOLDERS -->
+        <div class="sidebar-nav-section-title" id="sidebar-folders-header" style="cursor: pointer;" title="Click to open or close folders">
+          <div style="display: flex; align-items: center; gap: 0.45rem;">
+            <span id="folders-chevron" style="font-size: 10px; display: inline-block; transition: transform 0.2s ease;">▸</span>
+            <span>Folders</span>
+          </div>
+          <span class="section-subtext" style="cursor: pointer;" onclick="event.stopPropagation(); if(window.parent && window.parent.loadView){ window.parent.loadView('watchlists.html'); } else { location.href='watchlists.html'; }" title="Organize Folders in Watchlists">organize</span>
+        </div>
+        <div id="sidebar-folders-collapsible" style="display: none;">
+          <div id="sidebar-inline-folder-container" style="display: none;"></div>
+          <div id="sidebar-folder-tree">
+            <!-- Populated dynamically via JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Fixed Sidebar Action at Bottom (Lighter blue shade matching top bar) -->
+      <div class="sidebar-actions-bottom">
+        <a href="https://www.google.com" target="_blank" rel="noopener noreferrer" class="google-signin-btn" id="btn-sidebar-google" title="Open Google">
+          <svg class="google-icon" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <span>Google</span>
+        </a>
+      </div>
+
+    </aside>
+
+    <!-- ── PANE 2: RIGHT MAIN STREAM PANE ── -->
+    <main id="reader-stream-pane" class="reader-stream-pane">
+      
+      <!-- ── SECTION A: STANDARD STREAM VIEW (All Feeds, Starred, Saved, Folders) ── -->
+      <div id="standard-stream-view" class="standard-stream-view" style="display: flex; flex-direction: column; height: 100%; overflow: hidden;">
+        <!-- Stream Header & Toolbar -->
+        <div class="stream-pane-header">
+          <div class="stream-top-row">
+            <div>
+              <h2 id="stream-context-title" class="stream-context-title">
+                <span>📰</span> <span>All Feeds</span>
+              </h2>
+              <div id="stream-context-subtitle" class="stream-context-subtitle">Unified chronological intelligence stream</div>
+            </div>
+          </div>
+
+          <!-- Filter & View Controls Toolbar -->
+          <div class="stream-controls-bar">
+            <div class="stream-search-box">
+              <span class="stream-search-icon">🔍</span>
+              <input id="stream-search-input" type="text" class="stream-search-input" placeholder="Search articles, keywords, or topics...">
+            </div>
+
+            <div class="stream-toolbar-right">
+              <!-- Sort By Control (Matching Screenshot 3) -->
+              <div class="sort-by-group">
+                <label for="stream-sort-select">Sort By:</label>
+                <select id="stream-sort-select" class="sort-by-select">
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="source">Source (A-Z)</option>
+                  <option value="title">Title (A-Z)</option>
+                </select>
+              </div>
+
+              <!-- View Mode Switcher Pill (Matching Screenshot 2) -->
+              <div class="view-mode-pill" id="view-mode-pill">
+                <button type="button" class="view-mode-btn active" id="btn-view-list" data-view="list" title="List View">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+                </button>
+                <button type="button" class="view-mode-btn" id="btn-view-cards" data-view="cards" title="Cards View">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="stream-loader" style="display: none; padding: 1.5rem; text-align: center; color: #64748b;">
+          <p style="font-size: 0.88rem;">Ingesting & fusing stories...</p>
+        </div>
+
+        <!-- Article Stream Scroll Area -->
+        <div id="stream-cards-list" class="stream-scroll-area cards-list">
+          <!-- Populated dynamically via JS in List or Cards format -->
+        </div>
+      </div>
+
+      <!-- ── SECTION B: RSS FEED READER VIEW (Interactive Standalone Viewer) ── -->
+      <div id="rss-reader-view" class="rss-reader-view" style="display: none; flex-direction: column; height: 100%; overflow: hidden; background: #ffffff;">
+        
+        <!-- ===== HERO STATE (landing - ONLY THIS IS VISIBLE INITIALLY) ===== -->
+        <div id="rss-hero-state" class="rss-hero-state" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 3.5rem 1.5rem 2rem;">
+          <section class="hero-section" style="max-width: 860px; width: 100%; margin: 0 auto; text-align: center;">
+            <h1 class="hero-title" style="font-size: clamp(1.75rem, 3.5vw, 2.25rem); font-weight: 700; color: #0f172a; margin-bottom: 1.35rem;">RSS Feed Reader</h1>
+
+            <!-- Control Input Bar -->
+            <div class="control-bar" style="margin: 0 auto 1.15rem; max-width: 680px;">
+              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input type="url" id="rss-feed-url-input" class="tool-input" placeholder="Paste any RSS, Atom, or XML feed URL..." value="">
+              <button type="button" id="btn-rss-fetch-feed" class="btn-submit-circle" aria-label="Fetch Feed" title="Fetch Feed">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              </button>
+            </div>
+
+            <!-- Quick Sample Feeds Carousel -->
+            <div class="sample-carousel-wrap" style="max-width: 680px; margin: 0 auto 1.25rem;">
+              <button type="button" id="rss-sample-carousel-prev" class="sample-carousel-nav-btn prev" aria-label="Previous sample feeds" title="Previous feeds">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              </button>
+              <div class="sample-feeds-carousel" id="rss-sample-feeds-carousel">
+                <button type="button" class="sample-pill" data-feed="verge" onclick="window.selectRssSampleFeed && window.selectRssSampleFeed('verge')">The Verge</button>
+                <button type="button" class="sample-pill" data-feed="world" onclick="window.selectRssSampleFeed && window.selectRssSampleFeed('world')">NYT World</button>
+                <button type="button" class="sample-pill" data-feed="science" onclick="window.selectRssSampleFeed && window.selectRssSampleFeed('science')">ScienceDaily</button>
+                <button type="button" class="sample-pill" data-feed="bbc" onclick="window.selectRssSampleFeed && window.selectRssSampleFeed('bbc')">BBC News</button>
+                <button type="button" class="sample-pill" data-feed="nasa" onclick="window.selectRssSampleFeed && window.selectRssSampleFeed('nasa')">NASA</button>
+                <button type="button" class="sample-pill" data-feed="cnn" onclick="window.selectRssSampleFeed && window.selectRssSampleFeed('cnn')">CNN</button>
+                <button type="button" class="sample-pill" data-feed="sky" onclick="window.selectRssSampleFeed && window.selectRssSampleFeed('sky')">SKY</button>
+                <button type="button" class="sample-pill" data-feed="npr" onclick="window.selectRssSampleFeed && window.selectRssSampleFeed('npr')">NPR</button>
+                <button type="button" class="sample-pill" data-feed="wired" onclick="window.selectRssSampleFeed && window.selectRssSampleFeed('wired')">Wired</button>
+                <button type="button" class="sample-pill" data-feed="mit" onclick="window.selectRssSampleFeed && window.selectRssSampleFeed('mit')">MIT</button>
+                <button type="button" class="sample-pill" data-feed="forbes" onclick="window.selectRssSampleFeed && window.selectRssSampleFeed('forbes')">Forbes</button>
+              </div>
+              <button type="button" id="rss-sample-carousel-next" class="sample-carousel-nav-btn next" aria-label="Next sample feeds" title="Next feeds">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </button>
+            </div>
+          </section>
+
+          <!-- Loading / Error inside hero-state so they show before panel opens -->
+          <div id="rss-loading-spinner" class="loading-status-wrap" style="display: none;">
+            <div class="loading-spinner-inner">
+              <svg class="loading-spin-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle class="loading-spin-track" cx="12" cy="12" r="10" stroke="#e2e8f0" stroke-width="2.5"></circle>
+                <path class="loading-spin-arc" d="M12 2a10 10 0 0 1 10 10" stroke="#111827" stroke-width="2.5" stroke-linecap="round"></path>
+              </svg>
+              <span class="loading-status-text">Fetching and parsing feed stream...</span>
+            </div>
+          </div>
+          <div id="rss-error-container" style="display: none; margin: 1rem auto; max-width: 600px; text-align: center; color: #dc2626; font-size: 0.88rem; font-weight: 500;"></div>
+        </div>
+
+        <!-- ===== READER PANEL (shown after user selects or fetches a feed - Screenshot 3) ===== -->
+        <div id="rss-reader-panel" class="reader-panel" style="display: none; flex: 1; flex-direction: column; overflow: hidden; background: #ffffff;">
+          
+          <!-- Reader Toolbar (Screenshot 3) -->
+          <div class="reader-toolbar">
+            <div class="reader-toolbar-left">
+              <button id="rss-reader-back-btn" class="reader-back-btn" title="Back">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                <span class="back-btn-text">Back</span>
+              </button>
+              <div class="feed-search-capsule">
+                <svg class="search-mini-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="rss-feed-search-input" placeholder="Search headlines..." class="feed-search-input">
+              </div>
+            </div>
+            <div class="reader-toolbar-center">
+              <h2 id="rss-feed-title" class="feed-toolbar-title">Top Stories</h2>
+              <span id="rss-feed-count-badge" class="feed-stories-badge">0 stories</span>
+            </div>
+            <div class="reader-toolbar-right">
+              <div class="view-toggle-group">
+                <button id="rss-view-list-btn" class="view-toggle-btn active" title="List View">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                </button>
+                <button id="rss-view-grid-btn" class="view-toggle-btn" title="Grid View">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scrollable Cards Body -->
+          <div class="reader-body" style="flex: 1; overflow-y: auto; padding: 1.2rem 1.4rem 2rem;">
+            <div id="rss-cards-container" class="cards-list"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── SECTION C: STARRED ARTICLES VIEW (Dedicated Starred Page) ── -->
+      <div id="starred-view" class="dedicated-page-view" style="display: none;">
+        <div class="dedicated-page-header">
+          <div class="dedicated-title-group">
+            <h1>Starred Articles</h1>
+            <p>Your permanent collection of saved bookmarks and essential reading</p>
+          </div>
+          <div class="dedicated-actions">
+            <button type="button" class="dedicated-btn" id="btn-starred-export" onclick="window.exportStarredArticles && window.exportStarredArticles()">
+              <span>📤</span> Export JSON
+            </button>
+            <button type="button" class="dedicated-btn dedicated-btn-primary" id="btn-starred-refresh" onclick="window.loadStarredView && window.loadStarredView()">
+              <span>🔄</span> Refresh
+            </button>
+          </div>
+        </div>
+        <div id="starred-grid" class="card-grid">
+          <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #64748b;">
+            <span>Loading your bookmarks...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SECTION D: READ LATER QUEUE VIEW (Dedicated Read Later Page) ── -->
+      <div id="read-later-view" class="dedicated-page-view" style="display: none;">
+        <div class="dedicated-page-header">
+          <div class="dedicated-title-group">
+            <h1>Read Later Queue</h1>
+            <p>Curated reading list queued for your focused offline or downtime review</p>
+          </div>
+          <div class="dedicated-actions">
+            <button type="button" class="dedicated-btn dedicated-btn-primary" id="btn-read-later-refresh" onclick="window.loadReadLaterView && window.loadReadLaterView()">
+              <span>🔄</span> Refresh
+            </button>
+          </div>
+        </div>
+        <div id="read-later-grid" class="card-grid">
+          <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #64748b;">
+            <span>🔖 Loading your reading queue...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SECTION E: WATCHLISTS & FOLDERS ORGANIZER VIEW (Matching Watchlists Right Pane) ── -->
+      <div id="watchlists-view" class="watchlists-view-pane" style="display: none;">
+        <!-- Watchlists Content Head -->
+        <div class="wf-content-head-bar">
+          <div>
+            <nav id="wf-breadcrumbs" class="wf-breadcrumbs" hidden></nav>
+            <h1 id="wf-heading" class="wf-heading">All Feeds</h1>
+          </div>
+          <div class="wf-toolbar">
+            <button id="wf-export-btn" class="wf-btn" title="Export Watchlists as JSON">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Export</span>
+            </button>
+            <button id="wf-import-btn" class="wf-btn" title="Import Watchlists from JSON">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span>Import</span>
+            </button>
+            <input type="file" id="wf-import-file" accept=".json,application/json" hidden/>
+            <button id="wf-new-feed-btn" class="wf-btn wf-btn-primary" title="Add or Follow RSS Feeds">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>+ New feed</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Real-time search bar -->
+        <div class="wf-search-wrap">
+          <svg class="wf-search-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>
+          <input id="wf-search-input" type="search" placeholder="Search feeds by name or website…" autocomplete="off"/>
+        </div>
+
+        <!-- Feeds Scroll Body -->
+        <div class="wf-scroll-body">
+          <ul id="wf-feed-list" class="wf-feed-list"></ul>
+          <div id="wf-empty" class="wf-empty" style="display: none;">
+            <h2>No feeds in this folder yet</h2>
+            <p>Discover feeds from <a href="find-sources.html" style="color: #00BF63; font-weight: 600; text-decoration: underline;">Browse Sources</a> or add a custom feed in <a href="add-source.html" style="color: #00BF63; font-weight: 600; text-decoration: underline;">New Feed</a>.</p>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- ── FULLSCREEN READING OVERLAY MODAL ── -->
+  <div id="reading-modal" class="reader-reading-modal" style="display: none;">
+    <div class="reader-reading-container">
+      <div class="reader-reading-topbar">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span id="reading-source-badge" class="list-source-badge">Source</span>
+          <span id="reading-time-ago" style="font-size: 0.78rem; color: #64748b;">Just now</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <button type="button" id="btn-reading-smaller" class="action-btn-pill" title="Smaller font">A-</button>
+          <button type="button" id="btn-reading-bigger" class="action-btn-pill" title="Larger font">A+</button>
+          <button type="button" id="btn-reading-serif" class="action-btn-pill" title="Toggle Serif">Serif</button>
+          <a id="reading-orig-link" href="#" target="_blank" rel="noopener noreferrer" class="action-btn-pill" style="color: #2563eb; text-decoration: none;">
+            Open Original ↗
+          </a>
+          <button type="button" id="btn-close-reading-modal" class="action-btn-pill" style="font-weight: 700;">✕</button>
+        </div>
+      </div>
+      <div class="reader-reading-body">
+        <h1 id="reading-article-title" class="reading-article-title"></h1>
+        <div id="reading-article-meta" class="reading-article-meta"></div>
+        <img id="reading-hero-img" class="reading-hero-img" style="display: none;" alt="Article Image" />
+        <audio id="reading-audio-player" class="reader-audio-player" controls style="display: none;"></audio>
+        <div id="reading-prose" class="reading-prose"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODAL 1: AUTHENTICATION (Mandatory Login & Recovery) ── -->
+  <div id="auth-modal" class="reader-modal-backdrop" style="display: none;">
+    <div class="reader-modal-card">
+      <div class="modal-header">
+        <h3 id="auth-modal-title" class="modal-title">Sign In to FeedOmeter</h3>
+      </div>
+
+      <!-- Auth Mode Tabs (Sign In / Register) -->
+      <div id="auth-tabs-row" style="display: flex; border-bottom: 1px solid var(--border-color); gap: 1rem;">
+        <button id="auth-tab-login" class="sidebar-nav-item active" style="flex: 1; justify-content: center;" onclick="window.switchAuthMode('login');">Sign In</button>
+        <button id="auth-tab-register" class="sidebar-nav-item" style="flex: 1; justify-content: center;" onclick="window.switchAuthMode('register');">Register</button>
+      </div>
+
+      <div id="auth-error-msg" style="display: none; padding: 0.5rem; background: #fef2f2; color: #dc2626; border-radius: 6px; font-size: 0.85rem;"></div>
+      <div id="auth-success-msg" style="display: none; padding: 0.5rem; background: #ecfdf5; color: #059669; border-radius: 6px; font-size: 0.85rem;"></div>
+
+      <!-- 1. Primary Login / Register Form -->
+      <form id="auth-form" data-mode="login" style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <div id="auth-name-row" style="display: none;">
+          <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">Full Name</label>
+          <input id="auth-name" type="text" class="stream-search-input" style="width: 100%; box-sizing: border-box;" placeholder="Alex Smith">
+        </div>
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">Email Address</label>
+          <input id="auth-email" type="email" required class="stream-search-input" style="width: 100%; box-sizing: border-box;" placeholder="user@example.com">
+        </div>
+        <div>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.25rem;">
+            <label style="font-size: 0.8rem; font-weight: 600;">Password</label>
+            <button type="button" id="btn-forgot-password-trigger" style="background: none; border: none; font-size: 0.76rem; color: #0284c7; cursor: pointer; text-decoration: underline; padding: 0;" onclick="window.switchAuthMode('forgot');">Forgot password?</button>
+          </div>
+          <input id="auth-password" type="password" required minlength="8" class="stream-search-input" style="width: 100%; box-sizing: border-box;" placeholder="••••••••">
+        </div>
+        <button id="auth-submit-btn" type="submit" class="btn-primary" style="width: 100%; padding: 0.65rem; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 0.5rem;">
+          Sign In
+        </button>
+      </form>
+
+      <!-- 2. Forgot Password Panel -->
+      <div id="auth-forgot-panel" style="display: none; flex-direction: column; gap: 0.75rem;">
+        <p style="font-size: 0.82rem; color: var(--text-secondary, #64748b); margin: 0;">
+          Enter the email address associated with your FeedOmeter account. We will prepare a secure password reset token for you.
+        </p>
+        <form id="forgot-form" style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <div>
+            <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">Email Address</label>
+            <input id="forgot-email" type="email" required class="stream-search-input" style="width: 100%; box-sizing: border-box;" placeholder="user@example.com">
+          </div>
+          <button id="forgot-submit-btn" type="submit" class="btn-primary" style="width: 100%; padding: 0.65rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+            Request Password Reset
+          </button>
+          <button type="button" class="btn-secondary" style="width: 100%; padding: 0.55rem; border-radius: 8px; font-size: 0.82rem; cursor: pointer;" onclick="window.switchAuthMode('login');">
+            ← Back to Sign In
+          </button>
+        </form>
+      </div>
+
+      <!-- 3. Reset Password Panel (When token is present) -->
+      <div id="auth-reset-panel" style="display: none; flex-direction: column; gap: 0.75rem;">
+        <p style="font-size: 0.82rem; color: var(--text-secondary, #64748b); margin: 0;">
+          Set a new, secure password for <strong id="reset-account-email">your account</strong>.
+        </p>
+        <form id="reset-form" style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <input type="hidden" id="reset-token-val" value="">
+          <div>
+            <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">New Password</label>
+            <input id="reset-password-input" type="password" required minlength="8" class="stream-search-input" style="width: 100%; box-sizing: border-box;" placeholder="At least 8 characters">
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">Confirm New Password</label>
+            <input id="reset-password-confirm" type="password" required minlength="8" class="stream-search-input" style="width: 100%; box-sizing: border-box;" placeholder="Re-enter password">
+          </div>
+          <button id="reset-submit-btn" type="submit" class="btn-primary" style="width: 100%; padding: 0.65rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+            Update Password & Sign In
+          </button>
+          <button type="button" class="btn-secondary" style="width: 100%; padding: 0.55rem; border-radius: 8px; font-size: 0.82rem; cursor: pointer;" onclick="window.switchAuthMode('login');">
+            Cancel
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── MODAL 2: ADD RSS FEED ── -->
+  <div id="add-feed-modal" class="reader-modal-backdrop" style="display: none;">
+    <div class="reader-modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Subscribe to Feed</h3>
+        <button data-modal-close class="card-action-btn">✕</button>
+      </div>
+      <form id="add-feed-form" style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">RSS/Atom Feed URL</label>
+          <input id="feed-url-input" type="url" required class="stream-search-input" style="width: 100%; box-sizing: border-box;" placeholder="https://news.ycombinator.com/rss">
+        </div>
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">Feed Title (Optional)</label>
+          <input id="feed-title-input" type="text" class="stream-search-input" style="width: 100%; box-sizing: border-box;" placeholder="Hacker News">
+        </div>
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">Category</label>
+          <input id="feed-category-input" type="text" class="stream-search-input" style="width: 100%; box-sizing: border-box;" placeholder="tech, news, design...">
+        </div>
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">Assign to Folder</label>
+          <select id="feed-folder-select" class="stream-search-input" style="width: 100%; box-sizing: border-box;">
+            <option value="">(No folder / Top level)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%; padding: 0.65rem; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 0.5rem;">
+          Subscribe
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── MODAL 3: ADD FOLDER ── -->
+  <div id="add-folder-modal" class="reader-modal-backdrop" style="display: none;">
+    <div class="reader-modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Create Folder</h3>
+        <button data-modal-close class="card-action-btn">✕</button>
+      </div>
+      <form id="add-folder-form" style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">Folder Name</label>
+          <input id="folder-name-input" type="text" required class="stream-search-input" style="width: 100%; box-sizing: border-box;" placeholder="Tech & Engineering">
+        </div>
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">Icon</label>
+          <input id="folder-icon-input" type="text" class="stream-search-input" style="width: 100%; box-sizing: border-box;" value="📁">
+        </div>
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">Parent Folder (Optional for Nesting)</label>
+          <select id="folder-parent-select" class="stream-search-input" style="width: 100%; box-sizing: border-box;">
+            <option value="">(None - Top Level Folder)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%; padding: 0.65rem; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 0.5rem;">
+          Create Folder
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── MODAL 4: MOVE FEED TO FOLDER ── -->
+  <div id="wf-move-modal" class="reader-modal-backdrop" style="display: none;">
+    <div class="reader-modal-card" style="max-width: 400px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Move to folder</h3>
+        <button id="wf-move-modal-close" class="card-action-btn">✕</button>
+      </div>
+      <ul id="wf-move-folder-list" class="pf-modal-folder-list" style="max-height: 250px; overflow-y: auto; list-style: none; padding: 0; margin: 0.75rem 0; display: flex; flex-direction: column; gap: 4px;"></ul>
+    </div>
+  </div>
+
+  <!-- Client Application Scripts -->
+  <script src="scripts/feedometer-config.js"></script>
+  <script src="scripts/feedometer-auth.js"></script>
+  <script src="scripts/watchlists-api.js"></script>
+  <script src="scripts/follow-folder-modal.js"></script>
+  <script src="scripts/smart-crop.js"></script>
+  <script src="scripts/feed-imaging.js"></script>
+  <script src="scripts/feedometer-reader.js"></script>
+</body>
+</html>

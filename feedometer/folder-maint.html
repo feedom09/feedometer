@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Watchlists &amp; Folder Maintenance — FeedRead</title>
+  <link rel="stylesheet" href="styles/feedometer.css">
+  <link rel="stylesheet" href="styles/follow-folder-modal.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><path d=%22M3 6.5A2.5 2.5 0 0 1 5.5 4h4.382a2.5 2.5 0 0 1 1.952.94L13.2 6.5H18.5A2.5 2.5 0 0 1 21 9v9.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 18.5v-12z%22 fill=%22%2300BF63%22/></svg>">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --fm-bg: #ffffff;
+      --fm-paper: #ffffff;
+      --fm-paper-hover: #f8fafc;
+      --fm-border: #e2e8f0;
+      --fm-border-focus: #00BF63;
+      --fm-ink: #0f172a;
+      --fm-muted: #64748b;
+      --fm-green: #00BF63;
+      --fm-green-hover: #009e52;
+      --fm-green-light: rgba(0, 191, 99, 0.1);
+    }
+
+    [data-theme="dark"] {
+      --fm-bg: #0f172a;
+      --fm-paper: #111827;
+      --fm-paper-hover: #1e293b;
+      --fm-border: #1f2937;
+      --fm-border-focus: #00BF63;
+      --fm-ink: #f8fafc;
+      --fm-muted: #94a3b8;
+      --fm-green: #00BF63;
+      --fm-green-hover: #22c55e;
+      --fm-green-light: rgba(0, 191, 99, 0.18);
+    }
+
+    body {
+      font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+      background: var(--fm-bg);
+      color: var(--fm-ink);
+      line-height: 1.5;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* ── Top Header Navigation Bar (matches FeedRead Shell) ───────── */
+    .fm-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 58px;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--fm-border);
+      background: var(--fm-paper);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    /* Hide topbar when loaded inside an iframe of the shell */
+    html.rv-in-frame .fm-topbar,
+    body.in-frame .fm-topbar {
+      display: none;
+    }
+
+    .fm-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--fm-ink);
+    }
+
+    .fm-brand-img {
+      height: 28px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .fm-brand-fallback {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #ef4444;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .fm-brand-fallback span { color: #0f172a; }
+
+    .fm-nav-links {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .fm-nav-link {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--fm-muted);
+      text-decoration: none;
+      transition: color 0.15s ease;
+      position: relative;
+      padding: 4px 6px;
+    }
+
+    .fm-nav-link svg,
+    .fm-nav-link .nav-icon {
+      font-size: 16px;
+      line-height: 1;
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+    }
+
+    .fm-nav-link:hover {
+      color: var(--fm-ink);
+    }
+
+    .fm-nav-link.active {
+      color: var(--fm-ink);
+      font-weight: 750;
+    }
+
+    .fm-nav-link.active .nav-icon-wrap {
+      background: #00BF63;
+      color: #ffffff;
+      border-radius: 8px;
+      padding: 3px 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .fm-nav-link.active .nav-icon-wrap svg {
+      stroke: #ffffff;
+      fill: none;
+    }
+
+    .fm-user-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      border: 1px solid var(--fm-border);
+      color: var(--fm-ink);
+      font-weight: 750;
+      font-size: 12.5px;
+      display: grid;
+      place-items: center;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    /* ── Main Layout Container ────────────────────────────────────── */
+    .pf-layout {
+      min-height: calc(100vh - 60px);
+      background: var(--fm-paper);
+      padding: 16px 28px 48px;
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    .pf-page-wrap {
+      display: flex;
+      gap: 28px;
+      min-height: calc(100vh - 100px);
+    }
+
+    /* ── Left Pane: Organizer Sidebar ─────────────────────────────── */
+    .pf-folder-sidebar {
+      width: 250px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--fm-border);
+      padding: 12px 14px 16px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .pf-folder-sidebar-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 750;
+      letter-spacing: -0.015em;
+      color: var(--fm-ink);
+      padding: 0 8px 14px 4px;
+      margin-bottom: 4px;
+    }
+
+    .pf-folder-sidebar-title svg {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    #pf-folder-nav {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .pf-folder-item {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .pf-folder-btn {
+      width: 100%;
+      text-align: left;
+      padding: 8px 64px 8px 10px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      font-size: 13.5px;
+      font-weight: 550;
+      color: var(--fm-ink);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.12s ease, color 0.12s ease;
+      position: relative;
+      user-select: none;
+      box-sizing: border-box;
+    }
+
+    .pf-folder-btn:hover {
+      background: var(--fm-paper-hover);
+      color: var(--fm-ink);
+    }
+
+    .pf-folder-btn.is-active {
+      background: rgba(4, 107, 210, 0.08);
+      color: #046BD2;
+      font-weight: 650;
+    }
+
+    [data-theme="dark"] .pf-folder-btn.is-active {
+      background: rgba(56, 189, 248, 0.14);
+      color: #38bdf8;
+    }
+
+    .pf-folder-toggle-btn {
+      width: 16px;
+      height: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: transparent;
+      color: var(--fm-muted);
+      cursor: pointer;
+      padding: 0;
+      margin-right: -4px;
+      border-radius: 4px;
+      transition: transform 0.15s ease, color 0.12s ease;
+      flex-shrink: 0;
+    }
+
+    .pf-folder-toggle-btn.is-collapsed svg {
+      transform: rotate(-90deg);
+    }
+
+    .pf-folder-children {
+      list-style: none;
+      margin: 2px 0 2px 14px;
+      padding: 0 0 0 6px;
+      border-left: 1.5px solid rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    [data-theme="dark"] .pf-folder-children {
+      border-left-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .pf-folder-children.is-collapsed {
+      display: none;
+    }
+
+    .pf-folder-ic {
+      width: 16px;
+      height: 16px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      font-size: 14px;
+    }
+
+    .pf-folder-name {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.3;
+    }
+
+    .pf-folder-badge {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--fm-muted);
+      background: var(--fm-paper-hover);
+      padding: 1px 7px;
+      border-radius: 999px;
+      flex-shrink: 0;
+      transition: opacity 0.12s ease;
+      pointer-events: none;
+    }
+
+    .pf-folder-actions {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.12s ease;
+    }
+
+    .pf-folder-btn:hover .pf-folder-badge {
+      opacity: 0;
+    }
+
+    .pf-folder-btn:hover .pf-folder-actions {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .pf-folder-action-btn {
+      width: 20px;
+      height: 20px;
+      border-radius: 5px;
+      border: none;
+      background: transparent;
+      color: var(--fm-muted);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      font-size: 11px;
+      transition: background 0.1s ease, color 0.1s ease;
+    }
+
+    .pf-folder-action-btn:hover {
+      background: rgba(0, 0, 0, 0.08);
+      color: var(--fm-ink);
+    }
+
+    .pf-folder-action-btn.del:hover {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .pf-folder-action-btn.add-sub:hover {
+      background: rgba(0, 191, 99, 0.15);
+      color: var(--fm-green);
+    }
+
+    .pf-folder-add-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 12px;
+      border-radius: 10px;
+      border: 1px dashed #cbd5e1;
+      background: transparent;
+      font-size: 12.5px;
+      font-weight: 650;
+      color: var(--fm-muted);
+      cursor: pointer;
+      width: 100%;
+      margin-top: 8px;
+      transition: all 0.15s ease;
+    }
+
+    .pf-folder-add-btn:hover {
+      background: var(--fm-paper-hover);
+      color: var(--fm-green);
+      border-color: var(--fm-green);
+      border-style: solid;
+    }
+
+    /* ── Right Pane: Main Content Area ────────────────────────────── */
+    .pf-content-area {
+      flex: 1;
+      min-width: 0;
+      padding-top: 4px;
+    }
+
+    .pf-breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--fm-muted);
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pf-crumb-link {
+      color: var(--fm-muted);
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .pf-crumb-link:hover {
+      color: var(--fm-green);
+      text-decoration: underline;
+    }
+
+    .pf-crumb-sep {
+      opacity: 0.5;
+      font-size: 11px;
+    }
+
+    .pf-crumb-current {
+      color: var(--fm-ink);
+      font-weight: 700;
+    }
+
+    .pf-content-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .pf-heading {
+      font-size: 22px;
+      font-weight: 750;
+      letter-spacing: -0.015em;
+      color: var(--fm-ink);
+      margin: 0;
+    }
+
+    .pf-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pf-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 7px 14px;
+      border-radius: 10px;
+      font: 600 13px/1.2 var(--font-sans, system-ui);
+      cursor: pointer;
+      text-decoration: none;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      color: var(--fm-ink);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      transition: all .15s ease;
+      white-space: nowrap;
+    }
+
+    .pf-btn:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+    }
+
+    .pf-btn svg,
+    .pf-read-btn svg {
+      color: var(--fm-green);
+      stroke: var(--fm-green);
+      flex-shrink: 0;
+      transition: transform 0.2s ease, color 0.15s ease;
+    }
+
+    .pf-btn:hover svg,
+    .pf-read-btn:hover svg {
+      color: var(--fm-green-hover);
+      stroke: var(--fm-green-hover);
+      transform: scale(1.08);
+    }
+
+    .pf-btn-primary {
+      background: #ffffff;
+      color: var(--fm-ink);
+      border-color: #cbd5e1;
+    }
+
+    .pf-btn-primary:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+    }
+
+    [data-theme="dark"] .pf-btn {
+      background: #1e293b;
+      border-color: #334155;
+      color: #f8fafc;
+    }
+
+    /* ── Search Bar ───────────────────────────────────────────────── */
+    .pf-search-wrap {
+      margin-bottom: 18px;
+      position: relative;
+    }
+
+    .pf-search-wrap svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--fm-muted);
+      pointer-events: none;
+    }
+
+    #pf-search {
+      width: 100%;
+      padding: 10px 14px 10px 38px;
+      border-radius: 12px;
+      border: 1.5px solid var(--fm-border);
+      font: 500 14px/1 var(--font-sans, system-ui);
+      color: var(--fm-ink);
+      background: var(--fm-paper);
+      box-sizing: border-box;
+      outline: none;
+      transition: all .15s ease;
+    }
+
+    #pf-search:focus {
+      border-color: var(--fm-green);
+      box-shadow: 0 0 0 3px rgba(0, 191, 99, 0.12);
+    }
+
+    /* ── Feed Cards List ──────────────────────────────────────────── */
+    .pf-feed-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    .pf-card {
+      background: var(--fm-paper);
+      border: 1px solid var(--fm-border);
+      border-radius: 14px;
+      padding: 16px 18px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      transition: all .18s ease;
+      position: relative;
+    }
+
+    .pf-card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 4px 16px rgba(0,0,0,.06);
+    }
+
+    [data-theme="dark"] .pf-card {
+      background: #111827;
+      border-color: #1f2937;
+    }
+
+    .pf-card.starred {
+      border-color: #fbbf24;
+    }
+
+    .pf-card-favicon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--fm-border);
+      flex-shrink: 0;
+      object-fit: contain;
+      background: #f8fafc;
+      margin-top: 2px;
+    }
+
+    .pf-card-favicon-fallback {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--fm-border);
+      flex-shrink: 0;
+      background: #f1f5f9;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      margin-top: 2px;
+    }
+
+    .pf-card-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .pf-card-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .pf-card-title {
+      font-size: 15.5px;
+      font-weight: 700;
+      color: var(--fm-ink);
+      margin: 0;
+      white-space: normal;
+      line-height: 1.3;
+    }
+
+    .pf-star-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      color: #cbd5e1;
+      flex-shrink: 0;
+      padding: 0;
+      line-height: 1;
+      transition: color .12s;
+    }
+
+    .pf-card.starred .pf-star-btn,
+    .pf-star-btn:hover {
+      color: #f59e0b;
+    }
+
+    .pf-card-domain {
+      font-size: 11.5px;
+      color: var(--fm-muted);
+      font-weight: 600;
+      margin: 2px 0 6px;
+      display: block;
+    }
+
+    .pf-card-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .pf-tag {
+      font-size: 11.5px;
+      background: #f8fafc;
+      border: 1px solid var(--fm-border);
+      border-radius: 6px;
+      padding: 2px 8px;
+      color: var(--fm-muted);
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .pf-tag.folder-tag {
+      background: #fffbeb;
+      border-color: #fef3c7;
+      color: #92400e;
+      font-weight: 650;
+    }
+
+    [data-theme="dark"] .pf-tag.folder-tag {
+      background: #78350f;
+      border-color: #92400e;
+      color: #fef3c7;
+    }
+
+    .pf-card-actions {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .pf-menu-wrap {
+      position: relative;
+    }
+
+    .pf-menu-btn {
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--fm-ink);
+      flex-shrink: 0;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      transition: all .15s ease;
+      letter-spacing: 1px;
+      line-height: 1;
+    }
+
+    .pf-menu-btn:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+    }
+
+    .pf-dropdown {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 4px);
+      background: var(--fm-paper);
+      border: 1px solid var(--fm-border);
+      border-radius: 12px;
+      box-shadow: 0 12px 36px rgba(0,0,0,.15);
+      z-index: 50;
+      min-width: 160px;
+      overflow: hidden;
+      padding: 4px 0;
+    }
+
+    .pf-dropdown.is-open {
+      display: block;
+    }
+
+    .pf-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      font: 600 13px/1 var(--font-sans, system-ui);
+      color: var(--fm-ink);
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      text-decoration: none;
+      transition: background .1s;
+    }
+
+    .pf-dropdown-item:hover {
+      background: var(--fm-paper-hover);
+    }
+
+    .pf-dropdown-item.danger {
+      color: #dc2626;
+    }
+
+    .pf-dropdown-item.danger:hover {
+      background: #fef2f2;
+    }
+
+    .pf-dropdown-divider {
+      height: 1px;
+      background: var(--fm-border);
+      margin: 4px 0;
+    }
+
+    /* ── Empty State ──────────────────────────────────────────────── */
+    .pf-empty {
+      text-align: center;
+      padding: 56px 24px;
+      color: var(--fm-muted);
+      border: 1.5px dashed var(--fm-border);
+      border-radius: 16px;
+      margin-top: 12px;
+    }
+
+    .pf-empty h2 {
+      color: var(--fm-ink);
+      font-size: 18px;
+      margin: 0 0 8px;
+      font-weight: 700;
+    }
+
+    .pf-empty p {
+      margin: 6px 0 0;
+      font-size: 14px;
+    }
+
+    .pf-empty a {
+      color: var(--fm-green);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .pf-empty a:hover {
+      text-decoration: underline;
+    }
+
+    /* ── Move Modal ───────────────────────────────────────────────── */
+    #pf-move-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(6px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    #pf-move-modal.is-open {
+      display: flex;
+    }
+
+    .pf-modal-box {
+      background: var(--fm-paper);
+      border-radius: 18px;
+      padding: 22px 24px;
+      width: 380px;
+      max-width: 95vw;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+      border: 1px solid var(--fm-border);
+    }
+
+    .pf-modal-box h3 {
+      margin: 0 0 16px;
+      font-size: 17px;
+      font-weight: 750;
+      color: inherit;
+    }
+
+    .pf-modal-folder-list {
+      list-style: none;
+      margin: 0 0 16px;
+      padding: 0;
+      max-height: 250px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .pf-modal-folder-item {
+      padding: 9px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font: 600 13.5px/1.3 var(--font-sans, system-ui);
+      color: inherit;
+      transition: background .12s ease;
+      user-select: none;
+    }
+
+    .pf-modal-folder-item:hover {
+      background: var(--fm-green-light);
+      color: var(--fm-green);
+    }
+
+    .pf-modal-cancel {
+      width: 100%;
+      padding: 9px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      background: transparent;
+      cursor: pointer;
+      font: 600 13px/1 var(--font-sans, system-ui);
+      color: var(--fm-muted);
+      transition: all .15s ease;
+    }
+
+    .pf-modal-cancel:hover {
+      background: var(--fm-paper-hover);
+      color: var(--fm-ink);
+    }
+
+    /* ── Status Toast ─────────────────────────────────────────────── */
+    .pf-status {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      border-radius: 10px;
+      font: 700 13px/1 var(--font-sans, system-ui);
+      background: #0f172a;
+      color: #fff;
+      z-index: 1000;
+      pointer-events: none;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+      animation: ffmFadeIn 0.2s;
+    }
+
+    .pf-status.is-ok {
+      background: var(--fm-green);
+    }
+
+    .pf-status.is-error {
+      background: #dc2626;
+    }
+
+    @media (max-width: 768px) {
+      .pf-page-wrap {
+        flex-direction: column;
+      }
+      .pf-folder-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--fm-border);
+        padding-bottom: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header Bar (matches Screenshot) -->
+  <header class="fm-topbar">
+    <a href="home.html" class="fm-brand" title="FeedRead Home">
+      <img src="assets/feed-read-logo.png" alt="FeedRead" class="fm-brand-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/>
+      <div class="fm-brand-fallback" style="display:none;">Feed<span>Read</span></div>
+    </a>
+
+    <nav class="fm-nav-links">
+      <a href="add-source.html" class="fm-nav-link" title="Add Feed">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+        <span>Add</span>
+      </a>
+      <a href="home.html" class="fm-nav-link" title="Home">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Home</span>
+      </a>
+      <a href="folder-maint.html" class="fm-nav-link active" title="Watchlists &amp; Folders">
+        <span class="nav-icon-wrap">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        </span>
+        <span>Watchlists</span>
+      </a>
+      <a href="top-stories.html" class="fm-nav-link" title="Top Stories">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+        <span>Top</span>
+      </a>
+      <a href="reader.html" class="fm-nav-link" title="Inbox">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <span>Inbox</span>
+      </a>
+      <a href="home.html" class="fm-nav-link" title="Brief">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <span>Brief</span>
+      </a>
+      <a href="starred.html" class="fm-nav-link" title="Starred">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <span>Starred</span>
+      </a>
+      <a href="filters.html" class="fm-nav-link" title="Signals &amp; Filters">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2 20h.01"/><path d="M7 20v-4"/><path d="M12 20v-8"/><path d="M17 20V8"/><path d="M22 4v16"/></svg>
+        <span>Signals</span>
+      </a>
+      <a href="settings.html" class="fm-nav-link" title="More">
+        <span style="font-size:16px;letter-spacing:1px;">⋯</span>
+        <span>More</span>
+      </a>
+    </nav>
+
+    <a href="settings.html" class="fm-user-avatar" title="Account Profile">RK</a>
+  </header>
+
+  <!-- Main 2-Pane Content Area -->
+  <div id="pf-main" class="pf-layout">
+    <div class="pf-page-wrap">
+      
+      <!-- Left 2-Pane Organizer Sidebar -->
+      <aside class="pf-folder-sidebar" aria-label="Folder Organizer">
+        <div class="pf-folder-sidebar-title">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h4.382a2.5 2.5 0 0 1 1.952.94L13.2 6.5H18.5A2.5 2.5 0 0 1 21 9v9.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 18.5v-12z" fill="#00BF63"/>
+            <path d="M3 9.5h18" stroke="#ffffff" stroke-width="1.2" stroke-opacity="0.35"/>
+          </svg>
+          <span>Organizer</span>
+        </div>
+
+        <ul id="pf-folder-nav" role="list" aria-label="Feed folders">
+          <!-- Rendered dynamically -->
+        </ul>
+
+        <button id="pf-new-folder-btn" class="pf-folder-add-btn" title="Create new folder">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+          <span>+ New Folder</span>
+        </button>
+      </aside>
+
+      <!-- Right Main Content Area -->
+      <main class="pf-content-area">
+        <nav id="pf-breadcrumbs" class="pf-breadcrumbs" aria-label="Breadcrumb navigation" hidden></nav>
+
+        <div class="pf-content-head">
+          <h1 id="pf-heading" class="pf-heading">All Feeds</h1>
+          <div class="pf-toolbar">
+            <a id="pf-read-folder-stream-btn" href="reader.html" class="pf-btn pf-btn-primary" style="text-decoration:none;display:none;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span>Read Feeds</span>
+            </a>
+            <button id="pf-export" class="pf-btn" title="Export Watchlists as JSON">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Export</span>
+            </button>
+            <button id="pf-import-btn" class="pf-btn" title="Import Watchlists from JSON">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span>Import</span>
+            </button>
+            <input type="file" id="pf-import-file" accept=".json,application/json" hidden aria-hidden="true"/>
+            <a href="add-source.html" class="pf-btn pf-btn-primary" id="pf-new-feed-btn" style="text-decoration:none;" title="Add custom RSS feed URL">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>+ New feed</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Real-time search bar -->
+        <div class="pf-search-wrap">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>
+          <input id="pf-search" type="search" placeholder="Search feeds by name or website…" autocomplete="off" aria-label="Search feeds"/>
+        </div>
+
+        <!-- Feed cards list -->
+        <ul id="pf-feed-list" class="pf-feed-list" aria-label="Saved feeds"></ul>
+
+        <div id="pf-empty" class="pf-empty" hidden>
+          <h2>No feeds in this folder yet</h2>
+          <p>Discover feeds from <a href="find-sources.html">Browse Sources</a> or add a custom feed in <a href="add-source.html">New Feed</a>.</p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Move to folder modal -->
+  <div id="pf-move-modal" role="dialog" aria-modal="true" aria-label="Move feed to folder">
+    <div class="pf-modal-box">
+      <h3>Move to folder</h3>
+      <ul id="pf-move-folder-list" class="pf-modal-folder-list" role="list"></ul>
+      <button class="pf-modal-cancel" id="pf-move-cancel">Cancel</button>
+    </div>
+  </div>
+
+  <div id="pf-status" class="pf-status" role="status" aria-live="polite" hidden></div>
+
+  <!-- Core Scripts -->
+  <script src="scripts/feedometer-config.js"></script>
+  <script src="scripts/feedometer-auth.js"></script>
+  <script src="scripts/watchlists-api.js"></script>
+  <script src="scripts/follow-folder-modal.js"></script>
+  <script src="scripts/watchlists-page.js"></script>
+
+  <script>
+    // Frame detection: hide redundant topbar if loaded in iframe
+    try {
+      if (window.self !== window.top) {
+        document.documentElement.classList.add('rv-in-frame');
+        document.body.classList.add('in-frame');
+      }
+    } catch(e) {}
+  </script>
+</body>
+</html>

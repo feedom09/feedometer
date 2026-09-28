@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Automations & Webhooks — FeedOmeter 2.1</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Quicksand:wght@600;700;750;800&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+  <link rel="stylesheet" href="styles/feedometer.css" />
+  <link rel="stylesheet" href="styles/auth.css" />
+  <link rel="stylesheet" href="navbar/navbar.css" />
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: #ffffff;
+      color: #0f172a;
+      font-family: var(--font-sans, "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+      margin: 0;
+      padding: 1.75rem 2rem 4rem;
+      min-height: 100vh;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    .auto-container {
+      max-width: 1360px;
+      margin: 0 auto;
+    }
+
+    /* Modern Page Header */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color, #e2e8f0);
+    }
+
+    .page-title-group h1 {
+      font-family: var(--font-display, 'Quicksand', sans-serif);
+      font-size: 1.75rem;
+      font-weight: 750;
+      letter-spacing: -0.02em;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .page-title-group p {
+      font-size: 0.9rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+    }
+
+    /* Modern Pill Tabs */
+    .pill-tabs {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .pill-tab {
+      padding: 0.45rem 1.15rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid #e2e8f0;
+      background: #ffffff;
+      color: #64748b;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .pill-tab:hover {
+      background: #f8fafc;
+      color: #0f172a;
+      border-color: #cbd5e1;
+    }
+
+    .pill-tab.active {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+      box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.25);
+    }
+
+    /* Tab Panes */
+    .auto-tab-pane {
+      display: none;
+    }
+
+    .auto-tab-pane.active {
+      display: block;
+    }
+
+    /* Section Action Toolbar */
+    .auto-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .auto-toolbar-title {
+      font-family: var(--font-display, 'Quicksand', sans-serif);
+      font-size: 1.25rem;
+      font-weight: 750;
+      color: #0f172a;
+      letter-spacing: -0.01em;
+    }
+
+    .auto-toolbar-desc {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-top: 0.15rem;
+    }
+
+    /* Standard Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid #e2e8f0;
+      background: #ffffff;
+      color: #0f172a;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+
+    .btn-primary {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+      box-shadow: 0 2px 6px -1px rgba(15, 23, 42, 0.15);
+    }
+
+    .btn-primary:hover {
+      background: #1e293b;
+      border-color: #1e293b;
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .btn-danger {
+      background: #ffffff;
+      color: #dc2626;
+      border-color: #fecaca;
+    }
+
+    .btn-danger:hover {
+      background: #fef2f2;
+      border-color: #f87171;
+    }
+
+    .btn-sm {
+      padding: 0.35rem 0.75rem;
+      font-size: 0.8rem;
+    }
+
+    /* Grid & Cards */
+    .auto-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.15rem;
+    }
+
+    .auto-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 1.35rem 1.5rem;
+      box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.04);
+      transition: all 0.18s ease;
+    }
+
+    .auto-card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .auto-card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+      gap: 1rem;
+    }
+
+    .auto-card-title {
+      font-size: 1.05rem;
+      font-weight: 750;
+      color: #0f172a;
+      margin-bottom: 0.25rem;
+    }
+
+    .auto-card-url {
+      font-size: 0.85rem;
+      color: #64748b;
+      word-break: break-all;
+    }
+
+    .auto-card-secret {
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      padding: 0.45rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      margin-bottom: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .auto-card-secret code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      color: #0284c7;
+      font-weight: 600;
+    }
+
+    .auto-card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      font-size: 0.82rem;
+      color: #64748b;
+      margin-bottom: 1rem;
+    }
+
+    .auto-card-actions {
+      display: flex;
+      gap: 0.5rem;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 0.85rem;
+      flex-wrap: wrap;
+    }
+
+    /* Modern Badges */
+    .auto-badge {
+      padding: 0.2rem 0.65rem;
+      border-radius: 9999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .badge-green { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .badge-gray { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+    .badge-red { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .badge-blue { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+
+    /* Clean Empty State */
+    .auto-empty {
+      background: #ffffff;
+      border: 1.5px dashed #cbd5e1;
+      border-radius: 16px;
+      padding: 3.5rem 2rem;
+      text-align: center;
+      color: #64748b;
+    }
+
+    .auto-empty-icon {
+      font-size: 2.25rem;
+      margin-bottom: 0.75rem;
+      display: inline-block;
+    }
+
+    .auto-empty h3 {
+      font-family: var(--font-display, 'Quicksand', sans-serif);
+      font-size: 1.25rem;
+      font-weight: 750;
+      color: #0f172a;
+      margin-bottom: 0.35rem;
+    }
+
+    .auto-empty p {
+      max-width: 480px;
+      margin: 0 auto;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    /* Modern Modals */
+    .auto-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 1.25rem;
+    }
+
+    .auto-modal[hidden] {
+      display: none !important;
+    }
+
+    .auto-modal-dialog {
+      background: #ffffff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 580px;
+      max-height: calc(100vh - 48px);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+      animation: modalFadeIn 0.15s ease-out;
+    }
+
+    .auto-modal-dialog form {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+      flex: 1;
+      margin: 0;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .auto-modal-head {
+      padding: 1.15rem 1.5rem;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .auto-modal-head h3 {
+      font-family: var(--font-display, 'Quicksand', sans-serif);
+      font-size: 1.15rem;
+      font-weight: 750;
+      color: #0f172a;
+    }
+
+    .modal-close-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1px solid #e2e8f0;
+      background: #ffffff;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .modal-close-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+      border-color: #cbd5e1;
+    }
+
+    .auto-modal-body {
+      padding: 1.35rem 1.5rem;
+      overflow-y: auto;
+      overflow-x: hidden;
+      line-height: 1.5;
+      flex: 1 1 auto;
+      min-height: 0;
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 #f8fafc;
+    }
+
+    .auto-modal-body::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .auto-modal-body::-webkit-scrollbar-track {
+      background: #f8fafc;
+    }
+
+    .auto-modal-body::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    .auto-modal-body::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .auto-field {
+      margin-bottom: 1.15rem;
+    }
+
+    .auto-field label.field-title,
+    .auto-field > label:first-child {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .auto-field input:not([type="radio"]):not([type="checkbox"]),
+    .auto-field textarea,
+    .auto-field select {
+      width: 100%;
+      padding: 0.65rem 0.85rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      color: #0f172a;
+      background: #ffffff;
+      box-sizing: border-box;
+      transition: all 0.15s ease;
+    }
+
+    .auto-field input:not([type="radio"]):not([type="checkbox"]):focus,
+    .auto-field textarea:focus,
+    .auto-field select:focus {
+      outline: none;
+      border-color: #0f172a;
+      box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+    }
+
+    .cadence-card {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      cursor: pointer;
+      background: #ffffff;
+      transition: all 0.15s ease;
+      text-transform: none !important;
+      letter-spacing: normal !important;
+    }
+
+    .cadence-card:hover {
+      border-color: #94a3b8;
+      background: #fafafa;
+    }
+
+    .cadence-card input[type="radio"] {
+      width: 18px !important;
+      height: 18px !important;
+      min-width: 18px;
+      margin-top: 2px !important;
+      cursor: pointer;
+      accent-color: #0f172a;
+      flex-shrink: 0;
+    }
+
+    .auto-modal-actions {
+      padding: 1rem 1.5rem;
+      background: #f8fafc;
+      border-top: 1px solid #f1f5f9;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      border-radius: 0 0 16px 16px;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auto-container">
+    
+    <!-- Modern Page Header -->
+    <div class="page-header">
+      <div class="page-title-group">
+        <h1>Automations & Notification Dispatcher</h1>
+        <p>Configure real-time webhooks, in-app alerts, and scheduled digest previews. Email and Web Push require provider setup.</p>
+      </div>
+    </div>
+
+    <!-- Navigation Pill Tabs -->
+    <div class="pill-tabs">
+      <button type="button" class="pill-tab active auto-tab-btn" data-tab="webhooks">
+        <span>⚡</span>
+        <span>Outbound Webhooks</span>
+      </button>
+      <button type="button" class="pill-tab auto-tab-btn" data-tab="alerts">
+        <span>🔔</span>
+        <span>Keyword Alerts & Push</span>
+      </button>
+      <button type="button" class="pill-tab auto-tab-btn" data-tab="digests">
+        <span>📰</span>
+        <span>Scheduled Digests</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: WEBHOOKS -->
+    <div class="auto-tab-pane active" id="tab-webhooks">
+      <div class="auto-toolbar">
+        <div>
+          <h2 class="auto-toolbar-title">Registered Webhooks</h2>
+          <p class="auto-toolbar-desc">Real-time HTTP POST triggers on incoming article matches.</p>
+        </div>
+        <button type="button" class="btn btn-primary" id="btn-new-webhook">
+          <span>+</span>
+          <span>Create Webhook</span>
+        </button>
+      </div>
+
+      <div class="auto-grid" id="webhooks-list">
+        <div class="auto-empty">
+          <div class="auto-empty-icon">⚡</div>
+          <h3>Loading webhooks...</h3>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: ALERTS -->
+    <div class="auto-tab-pane" id="tab-alerts">
+      <div class="auto-toolbar">
+        <div>
+          <h2 class="auto-toolbar-title">Live Feed Alerts</h2>
+          <p class="auto-toolbar-desc">Get instant notifications when high-priority topics or companies are mentioned.</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button type="button" class="btn" id="btn-enable-push">
+            <span>🔔</span>
+            <span>Enable Web Push</span>
+          </button>
+          <button type="button" class="btn btn-primary" id="btn-new-alert">
+            <span>+</span>
+            <span>New Alert Rule</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="auto-grid" id="alerts-list">
+        <div class="auto-empty">
+          <div class="auto-empty-icon">🔔</div>
+          <h3>Loading alerts...</h3>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: DIGESTS -->
+    <div class="auto-tab-pane" id="tab-digests">
+      <div class="auto-toolbar">
+        <div>
+          <h2 class="auto-toolbar-title">Executive Briefing Digests</h2>
+          <p class="auto-toolbar-desc">Daily or weekly in-app digest summaries, with a responsive preview ready for future email delivery.</p>
+        </div>
+        <button type="button" class="btn btn-primary" id="btn-new-digest">
+          <span>+</span>
+          <span>Schedule Digest</span>
+        </button>
+      </div>
+
+      <div class="auto-grid" id="digests-list">
+        <div class="auto-empty">
+          <div class="auto-empty-icon">📰</div>
+          <h3>Loading digests...</h3>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODAL: CREATE WEBHOOK -->
+  <div class="auto-modal" id="modal-webhook" hidden>
+    <div class="auto-modal-dialog" style="max-width: 620px;">
+      <div class="auto-modal-head">
+        <h3>Register Webhook Dispatcher</h3>
+        <button type="button" class="modal-close-btn modal-close-trigger">✕</button>
+      </div>
+      <form id="form-webhook">
+        <div class="auto-modal-body">
+          <div class="auto-field">
+            <label>Webhook Name</label>
+            <input type="text" id="wh-name" required placeholder="e.g. Slack Engineering News Feed" />
+          </div>
+          <div class="auto-field">
+            <label>Target URL (HTTP POST)</label>
+            <input type="url" id="wh-url" required placeholder="https://hooks.slack.com/services/... or https://api.domain.com/webhook" />
+          </div>
+
+          <!-- Cadence Selection -->
+          <div class="auto-field">
+            <label class="field-title">Delivery Cadence</label>
+            <div style="display: flex; flex-direction: column; gap: 0.65rem; margin-top: 0.35rem;">
+              <label class="cadence-card">
+                <input type="radio" name="wh-cadence-radio" value="realtime" checked id="wh-cadence-realtime" />
+                <div style="flex: 1;">
+                  <div style="font-weight: 700; font-size: 0.88rem; color: #0f172a; display: flex; align-items: center; gap: 0.35rem;">
+                    <span>⚡</span>
+                    <span>Real-time</span>
+                  </div>
+                  <div style="font-size: 0.78rem; color: #64748b; margin-top: 0.15rem; font-weight: normal; line-height: 1.35;">Instant HTTP POST payload whenever a new article matches your filters</div>
+                </div>
+              </label>
+
+              <label class="cadence-card">
+                <input type="radio" name="wh-cadence-radio" value="scheduled" id="wh-cadence-scheduled" />
+                <div style="flex: 1;">
+                  <div style="font-weight: 700; font-size: 0.88rem; color: #0f172a; display: flex; align-items: center; gap: 0.35rem;">
+                    <span>📅</span>
+                    <span>Scheduled Digest</span>
+                  </div>
+                  <div style="font-size: 0.78rem; color: #64748b; margin-top: 0.15rem; font-weight: normal; line-height: 1.35;">Batched digest sent at your exact chosen UTC hour (Daily or Weekly)</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Scheduled Settings (Conditional) -->
+          <div id="wh-scheduled-settings" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem; margin-bottom: 1.15rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+              <div>
+                <label style="font-size: 0.78rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.35rem;">FREQUENCY</label>
+                <select id="wh-schedule-freq" style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem;">
+                  <option value="daily" selected>Daily Digest</option>
+                  <option value="weekly">Weekly Digest</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size: 0.78rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.35rem;">EXACT TIME (UTC)</label>
+                <select id="wh-schedule-time" style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem;">
+                  <option value="08:00">08:00 AM UTC (Morning)</option>
+                  <option value="09:00">09:00 AM UTC</option>
+                  <option value="12:00">12:00 PM UTC (Noon)</option>
+                  <option value="17:00" selected>05:00 PM UTC (Evening)</option>
+                  <option value="18:00">06:00 PM UTC</option>
+                  <option value="20:00">08:00 PM UTC</option>
+                </select>
+              </div>
+            </div>
+            <div id="wh-schedule-day-wrap" style="display: none;">
+              <label style="font-size: 0.78rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.35rem;">DAY OF WEEK</label>
+              <select id="wh-schedule-day" style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem;">
+                <option value="monday" selected>Every Monday</option>
+                <option value="tuesday">Every Tuesday</option>
+                <option value="wednesday">Every Wednesday</option>
+                <option value="thursday">Every Thursday</option>
+                <option value="friday">Every Friday</option>
+                <option value="saturday">Every Saturday</option>
+                <option value="sunday">Every Sunday</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Payload Format -->
+          <div class="auto-field">
+            <label>Payload Format</label>
+            <select id="wh-format-type">
+              <option value="standard" selected>Standard JSON Envelope (APIs, Zapier, n8n)</option>
+              <option value="slack">Slack / Discord Block Kit Cards (Rich native cards)</option>
+            </select>
+          </div>
+
+          <div class="auto-field">
+            <label>Filter Keywords (Optional, comma-separated)</label>
+            <input type="text" id="wh-keywords" placeholder="e.g. openai, nvidia, semiconductor" />
+          </div>
+          <div class="auto-field">
+            <label>Filter Domains (Optional, comma-separated)</label>
+            <input type="text" id="wh-domains" placeholder="e.g. reuters.com, techcrunch.com" />
+          </div>
+          <button type="button" class="btn" id="btn-test-direct-webhook" style="width: 100%; justify-content: center;">
+            <span>⚡</span>
+            <span>Test Ping Endpoint</span>
+          </button>
+        </div>
+        <div class="auto-modal-actions">
+          <button type="button" class="btn modal-close-trigger">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Webhook</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CREATE ALERT -->
+  <div class="auto-modal" id="modal-alert" hidden>
+    <div class="auto-modal-dialog">
+      <div class="auto-modal-head">
+        <h3>Create Topic & Keyword Alert</h3>
+        <button type="button" class="modal-close-btn modal-close-trigger">✕</button>
+      </div>
+      <form id="form-alert">
+        <div class="auto-modal-body">
+          <div class="auto-field">
+            <label>Alert Name</label>
+            <input type="text" id="alt-name" required placeholder="e.g. OpenAI & LLM Breakthroughs" />
+          </div>
+          <div class="auto-field">
+            <label>Include Keywords (comma-separated)</label>
+            <input type="text" id="alt-keywords" placeholder="e.g. gpt-5, o3, claude 3.7" />
+          </div>
+          <div class="auto-field">
+            <label>Exclude Keywords (comma-separated)</label>
+            <input type="text" id="alt-exclude" placeholder="e.g. crypto, rumor, sponsored" />
+          </div>
+          <div class="auto-field">
+            <label>Advanced Boolean AST Query (Optional)</label>
+            <input type="text" id="alt-boolean" placeholder="e.g. (OpenAI OR Claude) AND NOT crypto" />
+          </div>
+          <div class="auto-field">
+            <label>Delivery Channels</label>
+            <div style="display: flex; gap: 1.5rem; margin-top: 0.25rem;">
+              <label style="font-weight: 500; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 0.45rem; text-transform: none; cursor: pointer;">
+                <input type="checkbox" id="alt-ch-inapp" checked style="width: auto;" /> In-App Notification
+              </label>
+              <label style="font-weight: 500; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 0.45rem; text-transform: none; cursor: pointer;">
+                <input type="checkbox" id="alt-ch-email" style="width: auto;" /> Email alert
+              </label>
+              <label style="font-weight: 500; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 0.45rem; text-transform: none; cursor: pointer;">
+                <input type="checkbox" id="alt-ch-push" disabled style="width: auto;" /> Web Push (provider setup pending)
+              </label>
+            </div>
+          </div>
+          <button type="button" class="btn" id="btn-test-alert-rule" style="width: 100%; justify-content: center;">
+            <span>🔬</span>
+            <span>Evaluate Against Recent Articles</span>
+          </button>
+          <div id="alert-test-results" style="margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 13px;" hidden></div>
+        </div>
+        <div class="auto-modal-actions">
+          <button type="button" class="btn modal-close-trigger">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Alert</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CREATE DIGEST -->
+  <div class="auto-modal" id="modal-digest" hidden>
+    <div class="auto-modal-dialog">
+      <div class="auto-modal-head">
+        <h3>Schedule Executive Digest</h3>
+        <button type="button" class="modal-close-btn modal-close-trigger">✕</button>
+      </div>
+      <form id="form-digest">
+        <div class="auto-modal-body">
+          <div class="auto-field">
+            <label>Digest Name</label>
+            <input type="text" id="dgs-name" required placeholder="e.g. Daily Tech & AI Morning Briefing" />
+          </div>
+          <div class="auto-field">
+            <label>Frequency</label>
+            <select id="dgs-schedule">
+              <option value="daily" selected>Daily (Every 24 Hours)</option>
+              <option value="weekly">Weekly (Every Monday)</option>
+            </select>
+          </div>
+          <div class="auto-field">
+            <label>Delivery Target</label>
+            <select id="dgs-channel">
+              <option value="in_app" selected>In-App Summary</option>
+              <option value="email">Email Briefing</option>
+            </select>
+          </div>
+          <div class="auto-field">
+            <label>Filter Keywords (Optional)</label>
+            <input type="text" id="dgs-keywords" placeholder="e.g. technology, artificial intelligence" />
+          </div>
+        </div>
+        <div class="auto-modal-actions">
+          <button type="button" class="btn modal-close-trigger">Cancel</button>
+          <button type="submit" class="btn btn-primary">Schedule Digest</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: WEBHOOK LOGS -->
+  <div class="auto-modal" id="modal-logs" hidden>
+    <div class="auto-modal-dialog" style="max-width: 720px;">
+      <div class="auto-modal-head">
+        <h3>Recent Webhook Deliveries</h3>
+        <button type="button" class="modal-close-btn modal-close-trigger">✕</button>
+      </div>
+      <div class="auto-modal-body" id="logs-modal-body">
+        <!-- Dynamically rendered -->
+      </div>
+      <div class="auto-modal-actions">
+        <button type="button" class="btn modal-close-trigger">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DIGEST PREVIEW -->
+  <div class="auto-modal" id="modal-digest-preview" hidden>
+    <div class="auto-modal-dialog" style="max-width: 680px;">
+      <div class="auto-modal-head">
+        <h3>Live Digest Preview</h3>
+        <button type="button" class="modal-close-btn modal-close-trigger">✕</button>
+      </div>
+      <div class="auto-modal-body" style="padding: 0;">
+        <iframe id="digest-preview-iframe" style="width: 100%; height: 480px; border: none;"></iframe>
+      </div>
+      <div class="auto-modal-actions">
+        <button type="button" class="btn modal-close-trigger">Close Preview</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="scripts/feedometer-config.js?v=2.1.2"></script>
+  <script src="scripts/feedometer-auth.js?v=2.1.2"></script>
+  <script src="scripts/feedometer-automation.js?v=2.1.2"></script>
+  <script src="navbar/navbar.js?v=2.1.2"></script>
+
+</body>
+</html>

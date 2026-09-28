@@ -1,0 +1,23 @@
+{
+  "name": "feedometer",
+  "version": "1.0.0",
+  "description": "Fast, Clean feedOmeter — Free Online RSS & Atom Reader",
+  "main": "index.html",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "start:api": "node data-api/server.js",
+    "deploy:edge": "wrangler deploy",
+    "verify": "node --check server.js && node --check scripts/feedometer-config.js && node --check scripts/feedometer-builder.js && node --check data-api/server.js"
+  },
+  "devDependencies": {
+    "clean-css": "^5.3.3",
+    "terser": "^5.51.2",
+    "wrangler": "^4.136.3"
+  },
+  "author": "FeedOmeter",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "linkedom": "^0.18.13"
+  }
+}

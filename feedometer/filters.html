@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feed Filter Workspace — FeedOmeter 2.1</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Quicksand:wght@600;700;750;800&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+  <link rel="stylesheet" href="styles/feedometer.css" />
+  <link rel="stylesheet" href="styles/auth.css" />
+  <link rel="stylesheet" href="styles/feedometer-reader.css" />
+  <link rel="stylesheet" href="navbar/navbar.css" />
+
+  <style>
+    /* ── Override: use the reader grid as the base layout ── */
+    body { margin: 0; padding: 0; overflow: hidden; }
+
+    /* Filter sidebar inherits reader sidebar look */
+    .filters-sidebar-pane {
+      background: linear-gradient(180deg, #a8e0ff 0%, #97d9ff 50%, #83d1fc 100%);
+      color: #000;
+      border-right: 1px solid rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+      user-select: none;
+      width: 280px;
+      flex-shrink: 0;
+    }
+
+    .filters-sidebar-brand {
+      padding: 1rem 1.15rem 0.85rem;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+      background: rgba(255, 255, 255, 0.18);
+      flex-shrink: 0;
+    }
+    .filters-sidebar-eyebrow {
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #10b981;
+      margin: 0 0 0.2rem;
+    }
+    .filters-sidebar-title {
+      margin: 0;
+      font-size: 0.875rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #1e293b;
+      line-height: 1.3;
+    }
+    .filters-sidebar-subtitle {
+      margin: 0.2rem 0 0;
+      font-size: 0.72rem;
+      color: #475569;
+      line-height: 1.35;
+    }
+
+    /* Sidebar scrollable filter area — slightly darker matching nav drawer body */
+    .filters-sidebar-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem 0.9rem 1rem;
+      background: rgba(0, 0, 0, 0.04);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0,0,0,0.15) transparent;
+    }
+
+    /* Filter section groups */
+    .fsb-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(0,0,0,0.55);
+      padding: 0 0.4rem;
+      margin: 1rem 0 0.4rem;
+    }
+    .fsb-section-title:first-child { margin-top: 0.25rem; }
+
+    .fsb-summary {
+      font-size: 0.75rem;
+      color: rgba(0,0,0,0.6);
+      background: rgba(255,255,255,0.35);
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      border: 1px solid rgba(255,255,255,0.4);
+    }
+
+    /* Filter check rows */
+    .fsb-check-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.4rem 0.65rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: #0f172a;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-bottom: 0.15rem;
+    }
+    .fsb-check-row:hover { background: rgba(255,255,255,0.45); }
+    .fsb-check-row label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      flex: 1;
+    }
+    .fsb-check-row input[type="checkbox"] {
+      accent-color: #10b981;
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .fsb-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 0.1rem 0.45rem;
+      background: rgba(0,0,0,0.08);
+      color: #1e293b;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      flex-shrink: 0;
+    }
+
+    /* Freshness inline row */
+    .fsb-inline-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.65rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: #0f172a;
+      margin-bottom: 0.15rem;
+    }
+    .fsb-inline-row input[type="checkbox"] {
+      accent-color: #10b981;
+      width: 14px; height: 14px;
+      cursor: pointer; flex-shrink: 0;
+    }
+    .fsb-inline-row input[type="number"] {
+      width: 46px;
+      padding: 0.15rem 0.3rem;
+      border: 1px solid rgba(0,0,0,0.2);
+      border-radius: 4px;
+      font-size: 0.8rem;
+      text-align: center;
+      background: rgba(255,255,255,0.7);
+    }
+    .fsb-inline-row .fsb-badge { margin-left: auto; }
+
+    /* Textarea fields */
+    .fsb-field { margin-bottom: 0.5rem; }
+    .fsb-field span {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: rgba(0,0,0,0.65);
+      display: block;
+      margin-bottom: 0.2rem;
+      padding: 0 0.4rem;
+    }
+    .fsb-field textarea, .fsb-field select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.4rem 0.55rem;
+      border: 1px solid rgba(0,0,0,0.18);
+      border-radius: 7px;
+      font-size: 0.78rem;
+      font-family: inherit;
+      background: rgba(255,255,255,0.75);
+      resize: vertical;
+      color: #0f172a;
+    }
+    .fsb-field select { height: 32px; resize: none; }
+
+    /* Sidebar action buttons */
+    .fsb-actions {
+      padding: 0.75rem 0.9rem;
+      border-top: 1px solid rgba(0,0,0,0.08);
+      background: rgba(255, 255, 255, 0.18);
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      flex-shrink: 0;
+    }
+    .fsb-btn-primary {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      font-weight: 500;
+      font-size: 0.82rem;
+      border: none;
+      padding: 0.55rem 0.75rem;
+      border-radius: 9px;
+      cursor: pointer;
+      width: 100%;
+      box-shadow: 0 2px 8px rgba(16,185,129,0.25);
+      text-align: center;
+    }
+    .fsb-btn-secondary {
+      background: rgba(255,255,255,0.5);
+      color: #334155;
+      font-weight: 450;
+      font-size: 0.78rem;
+      border: 1px solid rgba(0,0,0,0.12);
+      padding: 0.45rem 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+    }
+    .fsb-btn-secondary:hover { background: rgba(255,255,255,0.7); }
+
+    /* ── Right content pane ── */
+    .filters-content-pane {
+      flex: 1;
+      background: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    /* Content header matching reader stream-pane-header */
+    .filters-content-header {
+      padding: 0.85rem 1.75rem 0.75rem;
+      border-bottom: 1px solid #e2e8f0;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      flex-shrink: 0;
+    }
+    .filters-header-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .filters-feed-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .filters-feed-subtitle {
+      font-size: 0.78rem;
+      color: #64748b;
+      margin-top: 0.15rem;
+    }
+    .filters-header-badges {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+    .filters-count-badge {
+      font-size: 0.78rem;
+      font-weight: 500;
+      padding: 0.3rem 0.85rem;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      border-radius: 999px;
+    }
+    .filters-studio-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      font-weight: 500;
+      font-size: 0.82rem;
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(16,185,129,0.22);
+      text-decoration: none;
+    }
+
+    /* Controls bar — search + sort + view */
+    .filters-controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      padding-top: 0.15rem;
+    }
+    .filters-search-box {
+      position: relative;
+      flex: 1;
+      max-width: 380px;
+      min-width: 200px;
+    }
+    .filters-search-icon {
+      position: absolute;
+      left: 0.65rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.85rem;
+      pointer-events: none;
+      color: #94a3b8;
+    }
+    .filters-search-input {
+      width: 100%;
+      box-sizing: border-box;
+      height: 34px;
+      padding: 0.4rem 0.75rem 0.4rem 2rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      background: #ffffff;
+      color: #0f172a;
+      outline: none;
+      transition: all 0.15s;
+    }
+    .filters-search-input:focus {
+      border-color: #0284c7;
+      box-shadow: 0 0 0 3px rgba(2,132,199,0.1);
+    }
+
+    .filters-toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .filters-sort-group {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #475569;
+    }
+    .filters-sort-select {
+      height: 32px;
+      padding: 0 0.55rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 7px;
+      font-size: 0.78rem;
+      background: #fff;
+      color: #0f172a;
+      outline: none;
+      cursor: pointer;
+    }
+    .filters-view-pill {
+      display: flex;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .filters-view-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: #94a3b8;
+      transition: all 0.15s;
+    }
+    .filters-view-btn svg { width: 16px; height: 16px; }
+    .filters-view-btn.active { background: #fff; color: #0f172a; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .filters-view-btn:hover:not(.active) { color: #475569; }
+
+    /* ── Article grid / list area ── */
+    .filters-articles-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem 1.75rem;
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 transparent;
+    }
+
+    /* Cards view (default) */
+    #create-filter-preview-list.view-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 0.85rem;
+    }
+
+    /* List view */
+    #create-filter-preview-list.view-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    #create-filter-preview-list.view-list .filter-preview-card {
+      flex-direction: row;
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
+      border-top: none;
+      border-bottom: 1px solid #f1f5f9;
+      box-shadow: none;
+      height: auto;
+    }
+    #create-filter-preview-list.view-list .filter-preview-card:first-child { border-top: 1px solid #f1f5f9; }
+    #create-filter-preview-list.view-list .filter-preview-media {
+      width: 100px;
+      aspect-ratio: unset;
+      height: 70px;
+      flex-shrink: 0;
+      border-radius: 6px;
+      margin: 0.6rem 0 0.6rem 0;
+    }
+    #create-filter-preview-list.view-list .filter-preview-body {
+      padding: 0.65rem 0.85rem;
+    }
+    #create-filter-preview-list.view-list .filter-preview-title {
+      -webkit-line-clamp: 2;
+    }
+    #create-filter-preview-list.view-list .filter-preview-desc { display: none; }
+
+    /* Card styles (reuse existing) */
+    .filter-preview-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      color: inherit;
+      box-shadow: 0 2px 8px -2px rgba(0,0,0,0.04);
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      height: 100%;
+    }
+    .filter-preview-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px -4px rgba(0,0,0,0.08); border-color: #cbd5e1; }
+    .filter-preview-media { width: 100%; aspect-ratio: 16/7; background: #f1f5f9; overflow: hidden; display: block; }
+    .filter-preview-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .filter-preview-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; background: #f8fafc; color: #94a3b8; }
+    .filter-preview-body { padding: 0.6rem 0.75rem 0.75rem; display: flex; flex-direction: column; flex: 1; }
+    .filter-preview-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.3rem; font-size: 0.65rem; font-weight: 750; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b; }
+    .filter-preview-domain { color: #10b981; }
+    .filter-preview-title { font-size: 0.8rem; font-weight: 750; line-height: 1.3; color: #0f172a; margin-bottom: 0.3rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .filter-preview-desc { font-size: 0.72rem; color: #64748b; line-height: 1.4; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    /* Stat badge in content header */
+    #create-filter-stats {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #1d4ed8;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="reader-grid-container" style="grid-template-columns: 280px 1fr;">
+
+    <!-- ── LEFT SIDEBAR: Filter Rules ── -->
+    <aside class="filters-sidebar-pane">
+
+      <div class="filters-sidebar-brand">
+        <p class="filters-sidebar-eyebrow">Filters</p>
+        <h2 class="filters-sidebar-title" id="filters-page-title">Live Filter Rules</h2>
+        <p class="filters-sidebar-subtitle">Toggling rules updates the live preview instantly.</p>
+      </div>
+
+      <div class="filters-sidebar-scroll">
+
+        <!-- 1. Quality -->
+        <div class="fsb-section-title">Quality</div>
+        <div class="fsb-check-row">
+          <label for="filter-no-image"><input type="checkbox" id="filter-no-image" /><span>No images</span></label>
+          <span class="fsb-badge" id="count-no-image">0</span>
+        </div>
+        <div class="fsb-check-row">
+          <label for="filter-no-description"><input type="checkbox" id="filter-no-description" /><span>No description</span></label>
+          <span class="fsb-badge" id="count-no-description">0</span>
+        </div>
+        <div class="fsb-check-row">
+          <label for="filter-no-date"><input type="checkbox" id="filter-no-date" /><span>No dates</span></label>
+          <span class="fsb-badge" id="count-no-date">0</span>
+        </div>
+        <div class="fsb-check-row">
+          <label for="filter-no-secure-link"><input type="checkbox" id="filter-no-secure-link" /><span>Non-HTTPS links</span></label>
+          <span class="fsb-badge" id="count-no-secure-link">0</span>
+        </div>
+
+        <!-- 2. Duplicates -->
+        <div class="fsb-section-title">Duplicate Cleanup</div>
+        <div class="fsb-check-row">
+          <label for="filter-duplicate-title"><input type="checkbox" id="filter-duplicate-title" /><span>Duplicate titles</span></label>
+          <span class="fsb-badge" id="count-duplicate-title">0</span>
+        </div>
+        <div class="fsb-check-row">
+          <label for="filter-similar-title"><input type="checkbox" id="filter-similar-title" /><span>Similar stories (≥74%)</span></label>
+          <span class="fsb-badge" id="count-similar-title">0</span>
+        </div>
+
+        <!-- 3. Freshness -->
+        <div class="fsb-section-title">Freshness</div>
+        <div class="fsb-inline-row">
+          <input type="checkbox" id="filter-old-posts" />
+          <label for="filter-old-posts" style="cursor:pointer; margin:0; font-size:0.82rem; font-weight:500;">Hide older than</label>
+          <input type="number" id="filter-old-days" min="1" max="30" value="3" />
+          <span style="font-size:0.8rem;">days</span>
+          <span class="fsb-badge" id="count-old-posts">0</span>
+        </div>
+
+        <!-- 4. Keywords -->
+        <div class="fsb-section-title">Keywords</div>
+        <div class="fsb-field">
+          <span>Include keywords</span>
+          <textarea id="filter-include-keywords" rows="2" placeholder="e.g. ai, chips, market"></textarea>
+        </div>
+        <div class="fsb-field">
+          <span>Exclude keywords</span>
+          <textarea id="filter-exclude-keywords" rows="2" placeholder="e.g. rumor, podcast"></textarea>
+        </div>
+
+        <!-- 5. Domains -->
+        <div class="fsb-section-title">Domains</div>
+        <div class="fsb-field">
+          <span>Only these domains</span>
+          <textarea id="filter-include-domains" rows="2" placeholder="e.g. reuters.com, bbc.com"></textarea>
+        </div>
+        <div class="fsb-field">
+          <span>Hide these domains</span>
+          <textarea id="filter-exclude-domains" rows="2" placeholder="e.g. spam.com"></textarea>
+        </div>
+
+        <!-- 6. Language -->
+        <div class="fsb-section-title">Language</div>
+        <div class="fsb-field">
+          <span>Story Language</span>
+          <select id="filter-language">
+            <option value="all">All Languages</option>
+            <option value="en">English Only (en)</option>
+            <option value="es">Spanish (es)</option>
+            <option value="fr">French (fr)</option>
+            <option value="de">German (de)</option>
+            <option value="hi">Hindi (hi)</option>
+          </select>
+        </div>
+
+      </div><!-- /scroll -->
+
+      <!-- Sidebar action buttons -->
+      <div class="fsb-actions">
+        <button type="button" class="fsb-btn-primary" id="filters-btn-open-widget">✨ Return to Widget Studio →</button>
+        <button type="button" class="fsb-btn-secondary" id="create-filter-reset">↺ Reset all filters</button>
+      </div>
+
+    </aside>
+
+    <!-- ── RIGHT CONTENT PANE ── -->
+    <main class="filters-content-pane">
+
+      <!-- Content header -->
+      <div class="filters-content-header">
+        <div class="filters-header-top-row">
+          <div>
+            <h2 class="filters-feed-title" id="filters-feed-display-title">📰 <span id="filters-feed-name-span">Feed Preview</span></h2>
+            <div class="filters-feed-subtitle" id="filters-page-source">Tune quality, remove duplicates, and filter news stories in real time.</div>
+          </div>
+          <div class="filters-header-badges">
+            <span class="filters-count-badge" id="filters-page-count">0 items visible</span>
+            <span id="create-filter-stats" style="display:none;">0 of 0 visible</span>
+            <button type="button" class="filters-studio-btn" id="filters-btn-sidebar-widget">✨ Return to Widget Studio →</button>
+          </div>
+        </div>
+
+        <!-- Search + Sort + View controls -->
+        <div class="filters-controls-bar">
+          <div class="filters-search-box">
+            <span class="filters-search-icon">🔍</span>
+            <input type="text" id="filters-local-search" class="filters-search-input" placeholder="Search articles, keywords, or topics..." />
+          </div>
+          <div class="filters-toolbar-right">
+            <div class="filters-sort-group">
+              <label for="filters-sort-select">Sort By:</label>
+              <select id="filters-sort-select" class="filters-sort-select">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="source">Source (A-Z)</option>
+                <option value="title">Title (A-Z)</option>
+              </select>
+            </div>
+            <div class="filters-view-pill">
+              <button type="button" class="filters-view-btn" id="filters-btn-view-list" title="List View">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+              </button>
+              <button type="button" class="filters-view-btn active" id="filters-btn-view-cards" title="Cards View">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Article grid -->
+      <div class="filters-articles-area">
+        <div id="create-filter-preview-list" class="view-cards">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+    </main>
+
+  </div><!-- /reader-grid-container -->
+
+  <!-- Scripts -->
+  <script src="scripts/feedometer-config.js"></script>
+  <script src="scripts/feedometer-auth.js"></script>
+  <script src="scripts/smart-crop.js"></script>
+  <script src="scripts/feed-imaging.js"></script>
+  <script src="scripts/feedometer-filters.js"></script>
+
+</body>
+</html>

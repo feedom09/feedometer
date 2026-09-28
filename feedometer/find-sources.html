@@ -1,0 +1,2947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Browse Sources — FeedOmeter</title>
+  <script>
+    (function(){
+      try {
+        if (window.self !== window.top) document.documentElement.classList.add('rv-in-frame');
+        var s = localStorage.getItem('rv_colour_scheme') || 'vanilla';
+        var valid = ['vanilla','slate','moss','peach','sand','bw'];
+        if (valid.indexOf(s) === -1) s = 'vanilla';
+        if (s !== 'vanilla') document.documentElement.setAttribute('data-scheme', s);
+        var t = localStorage.getItem('aggregator-theme');
+        if (t === 'dark') document.documentElement.setAttribute('data-theme','dark');
+      } catch(e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/tokens.css"/>
+  <link rel="stylesheet" href="styles/rover-shell.css"/>
+  <link rel="stylesheet" href="styles/follow-folder-modal.css"/>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bs-bg: var(--paper, #ffffff);
+      --bs-card-bg: var(--paper, #ffffff);
+      --bs-card-hover: var(--paper-2, #f8fafc);
+      --bs-border: var(--line, #e2e8f0);
+      --bs-border-hover: var(--line-2, #cbd5e1);
+      --bs-ink: var(--ink, #0f172a);
+      --bs-ink-2: var(--ink-2, #334155);
+      --bs-muted: var(--muted, #64748b);
+      --bs-accent: var(--accent, #ea580c);
+      --bs-green: #00BF63;
+      --bs-green-bg: #dcfce7;
+      --bs-green-text: #00BF63;
+      --bs-dropdown-bg: #ffffff;
+    }
+
+    [data-theme="dark"] {
+      --bs-bg: #0f172a;
+      --bs-card-bg: #1e293b;
+      --bs-card-hover: #334155;
+      --bs-border: rgba(226, 232, 240, 0.12);
+      --bs-border-hover: rgba(226, 232, 240, 0.25);
+      --bs-ink: #f8fafc;
+      --bs-ink-2: #cbd5e1;
+      --bs-muted: #94a3b8;
+      --bs-green: #00BF63;
+      --bs-green-bg: rgba(34, 197, 94, 0.15);
+      --bs-green-text: #00BF63;
+      --bs-dropdown-bg: #1e293b;
+    }
+
+    html, body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bs-bg);
+      color: var(--bs-ink);
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    html.rv-in-frame,
+    html.rv-in-frame body {
+      background: transparent !important;
+    }
+
+    /* ── Main Container ── */
+    .bs-wrap {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 24px clamp(16px, 3.5vw, 32px) 60px;
+    }
+
+    /* ── Top Tabs Bar (Websites, Reddit, Newsletters, Google News) ── */
+    .bs-tabs {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      border-bottom: 1px solid var(--bs-border);
+      padding-bottom: 8px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+    }
+
+    .bs-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      border: 0;
+      padding: 6px 2px 10px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--bs-muted);
+      cursor: pointer;
+      position: relative;
+      transition: color 0.15s ease;
+      white-space: nowrap;
+    }
+    .bs-tab:hover {
+      color: var(--bs-ink);
+    }
+    .bs-tab.active {
+      color: var(--bs-ink);
+      font-weight: 750;
+    }
+    .bs-tab.active::after {
+      content: "";
+      position: absolute;
+      bottom: -9px;
+      left: 0;
+      right: 0;
+      height: 2.5px;
+      background: var(--bs-ink);
+      border-radius: 2px;
+    }
+
+    /* ── Search Container with Floating Context Autocomplete ── */
+    .bs-search-wrap {
+      position: relative;
+      margin-bottom: 28px;
+      z-index: 200;
+    }
+
+    .bs-search-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bs-card-bg);
+      border: 1.5px solid var(--bs-border);
+      border-radius: 14px;
+      padding: 6px 14px;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      transition: all 0.2s ease;
+    }
+    .bs-search-row.focused,
+    .bs-search-row:focus-within {
+      border-color: var(--bs-green, #00BF63);
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
+    }
+
+    .bs-search-icon {
+      color: #ef4444;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+    .bs-search-icon svg {
+      color: #ef4444;
+      stroke: #ef4444;
+    }
+
+    .bs-search-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 14.5px;
+      font-weight: 500;
+      color: var(--bs-ink);
+      padding: 6px 0;
+    }
+    .bs-search-input::placeholder {
+      color: var(--bs-muted);
+      font-weight: 400;
+    }
+
+    .bs-search-clear {
+      background: var(--paper-2, #f1f5f9);
+      border: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      color: var(--bs-muted);
+      font-size: 13px;
+      cursor: pointer;
+      display: none;
+      place-items: center;
+    }
+    .bs-search-clear.visible {
+      display: grid;
+    }
+
+    .bs-lang-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      border-left: 1px solid var(--bs-border);
+      padding-left: 4px;
+    }
+
+    .bs-lang-select {
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--bs-muted);
+      cursor: pointer;
+      padding: 4px 22px 4px 6px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+    [data-theme="dark"] .bs-lang-select {
+      color: var(--bs-ink-2);
+    }
+
+    .bs-lang-chevron {
+      position: absolute;
+      right: 4px;
+      pointer-events: none;
+      color: #00BF63;
+      stroke: #00BF63;
+      flex-shrink: 0;
+    }
+    [data-theme="dark"] .bs-lang-chevron {
+      color: #00BF63;
+      stroke: #00BF63;
+    }
+
+    /* ── Floating Context Autocomplete Dropdown ── */
+    .bs-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background: var(--bs-dropdown-bg);
+      border: 1px solid var(--bs-border);
+      border-radius: 14px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0,0,0,0.06);
+      max-height: 420px;
+      overflow-y: auto;
+      z-index: 1000;
+      padding: 8px 0;
+      display: none;
+    }
+    .bs-dropdown.open {
+      display: block;
+    }
+
+    .bs-dd-section-title {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--bs-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 8px 16px 4px;
+    }
+
+    .bs-dd-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 9px 16px;
+      cursor: pointer;
+      transition: background 0.12s ease;
+      text-decoration: none;
+      color: inherit;
+    }
+    .bs-dd-item:hover,
+    .bs-dd-item.selected {
+      background: var(--bs-card-hover);
+    }
+
+    .bs-dd-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: #0f172a;
+      color: #ffffff;
+      display: grid;
+      place-items: center;
+      font-size: 10.5px;
+      font-weight: 800;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .bs-dd-topic-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--paper-2, #f8fafc);
+      border: 1px solid var(--bs-border);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--bs-ink);
+    }
+    .bs-dd-item:hover .bs-dd-topic-pill,
+    .bs-dd-item.selected .bs-dd-topic-pill {
+      border-color: var(--bs-ink);
+      background: var(--bs-ink);
+      color: #ffffff;
+    }
+
+    .bs-dd-text-group {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.25;
+      overflow: hidden;
+    }
+    .bs-dd-main-text {
+      font-size: 13.5px;
+      font-weight: 650;
+      color: var(--bs-ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .bs-dd-sub-text {
+      font-size: 11px;
+      color: var(--bs-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── EXPLORE MODE (Empty search state) ── */
+    #bs-explore-view {
+      display: block;
+    }
+
+    /* Hero Topic Visual Cards (Tech, Cyber, Marketing, Business) */
+    .bs-hero-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 34px;
+    }
+
+    .bs-hero-card {
+      height: 190px;
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      padding: 16px;
+      color: #ffffff;
+      text-decoration: none;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+      background-size: cover;
+      background-position: center;
+    }
+    .bs-hero-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+    }
+    .bs-hero-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      z-index: 1;
+    }
+
+    .bs-hero-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      position: relative;
+      z-index: 2;
+      text-align: center;
+    }
+
+    /* Section Headers */
+    .bs-section-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.015em;
+      color: var(--bs-ink);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Industry Grid (Cards) */
+    .bs-industry-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 34px;
+    }
+
+    .bs-ind-card {
+      background: var(--bs-card-bg);
+      border: 1px solid var(--bs-border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+    .bs-ind-card:hover {
+      border-color: var(--bs-border-hover);
+      background: var(--bs-card-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+    }
+
+    .bs-ind-name {
+      font-size: 13.5px;
+      font-weight: 750;
+      color: var(--bs-ink);
+    }
+
+    .bs-ind-feature {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .bs-ind-logo {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: #0f172a;
+      color: #ffffff;
+      display: grid;
+      place-items: center;
+      font-size: 10.5px;
+      font-weight: 800;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .bs-ind-meta {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.25;
+      overflow: hidden;
+    }
+    .bs-ind-feat-label {
+      font-size: 10px;
+      color: var(--bs-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .bs-ind-publisher {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--bs-ink-2);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    /* ── RESULTS MODE (Dual Column: Feeds Left, Related Topics Right) ── */
+    #bs-results-view {
+      display: none;
+    }
+
+    .bs-results-layout {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 28px;
+      align-items: flex-start;
+    }
+
+    /* Sorting & Control Bar */
+    .bs-sort-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+    }
+    .bs-sort-select {
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--bs-muted);
+      cursor: pointer;
+    }
+    .bs-sort-select:hover {
+      color: var(--bs-ink);
+    }
+
+    /* Feed Results List */
+    .bs-feed-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Individual Feed Card */
+    .bs-feed-card {
+      background: var(--bs-card-bg);
+      border: 1px solid var(--bs-border);
+      border-radius: 16px;
+      padding: 20px 22px;
+      transition: all 0.18s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .bs-feed-card:hover {
+      border-color: var(--bs-border-hover);
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
+    }
+
+    .bs-fc-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .bs-fc-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: #0f172a;
+      color: #ffffff;
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+      font-weight: 800;
+      flex-shrink: 0;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .bs-fc-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .bs-fc-title-group {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .bs-fc-title {
+      font-size: 15.5px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: var(--bs-ink);
+      line-height: 1.25;
+      margin-bottom: 3px;
+    }
+
+    .bs-fc-subinfo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--bs-muted);
+    }
+    .bs-fc-domain {
+      color: var(--bs-muted);
+      text-decoration: none;
+    }
+    .bs-fc-domain:hover {
+      text-decoration: underline;
+    }
+
+    .bs-fc-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .bs-similar-btn {
+      background: transparent;
+      border: 0;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--bs-muted);
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: 8px;
+      transition: all 0.15s ease;
+    }
+    .bs-similar-btn:hover {
+      background: var(--paper-2, #f1f5f9);
+      color: var(--bs-ink);
+    }
+
+    .bs-follow-btn {
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1.5px solid var(--bs-green);
+      background: transparent;
+      color: var(--bs-green);
+      font-size: 12.5px;
+      font-weight: 750;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .bs-follow-btn:hover {
+      background: var(--bs-green-bg);
+    }
+    .bs-follow-btn.following {
+      background: var(--bs-green);
+      color: #ffffff;
+      border-color: var(--bs-green);
+    }
+    .bs-follow-btn.following:hover {
+      background: #dc2626;
+      border-color: #dc2626;
+    }
+    .bs-follow-btn.following:hover::after {
+      content: "Unfollow";
+    }
+    .bs-follow-btn.following:hover span {
+      display: none;
+    }
+
+    .bs-fc-desc {
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--bs-ink-2);
+    }
+
+    .bs-fc-articles {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding-left: 2px;
+    }
+    .bs-fc-article-item {
+      font-size: 12px;
+      color: var(--bs-muted);
+      position: relative;
+      padding-left: 14px;
+      line-height: 1.4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .bs-fc-article-item::before {
+      content: "•";
+      position: absolute;
+      left: 2px;
+      top: 0;
+      color: var(--bs-muted);
+      font-size: 14px;
+    }
+
+    .bs-fc-metrics {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 11.5px;
+      color: var(--bs-muted);
+      font-weight: 600;
+      border-top: 1px solid var(--bs-border);
+      padding-top: 10px;
+      margin-top: 2px;
+    }
+
+    .bs-relevance-bar {
+      width: 48px;
+      height: 4px;
+      border-radius: 4px;
+      background: var(--bs-border);
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      vertical-align: middle;
+      margin: 0 4px;
+    }
+    .bs-relevance-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      background: #475569;
+      border-radius: 4px;
+    }
+
+    /* ── Right Column: Related Topics Panel ── */
+    .bs-related-panel {
+      position: sticky;
+      top: 20px;
+      background: var(--bs-card-bg);
+      border: 1px solid var(--bs-border);
+      border-radius: 16px;
+      padding: 18px 18px 20px;
+    }
+
+    .bs-rp-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--bs-ink);
+      margin-bottom: 14px;
+      letter-spacing: -0.01em;
+    }
+
+    .bs-rp-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .bs-tag-pill {
+      background: var(--paper-2, #f8fafc);
+      border: 1px solid var(--bs-border);
+      color: var(--bs-ink-2);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      user-select: none;
+    }
+    .bs-tag-pill:hover {
+      border-color: var(--bs-ink);
+      background: var(--bs-ink);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+    .bs-tag-pill .hash {
+      color: var(--bs-muted);
+      font-weight: 400;
+    }
+    .bs-tag-pill:hover .hash {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    /* Notification toast */
+    .bs-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: bsFadeIn 0.2s ease;
+    }
+    @keyframes bsFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Side Drawer Popup on Card Click ── */
+    .bs-drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(2px);
+      z-index: 9000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+    }
+    .bs-drawer-backdrop.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .bs-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: min(520px, 92vw);
+      background: var(--bs-card-bg);
+      border-left: 1px solid var(--bs-border);
+      box-shadow: none;
+      z-index: 9001;
+      transform: translateX(100%);
+      visibility: hidden;
+      pointer-events: none;
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.28s;
+      display: flex;
+      flex-direction: column;
+    }
+    .bs-drawer.open {
+      transform: translateX(0);
+      visibility: visible;
+      pointer-events: auto;
+      box-shadow: -10px 0 35px rgba(0,0,0,0.18);
+    }
+
+    .bs-drawer-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--bs-border);
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      position: relative;
+    }
+    .bs-drawer-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: transparent;
+      border: 0;
+      font-size: 24px;
+      line-height: 1;
+      color: var(--bs-muted);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+    }
+    .bs-drawer-close:hover {
+      color: var(--bs-ink);
+      background: var(--paper-2, #f1f5f9);
+    }
+
+    .bs-drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+    }
+
+    .bs-drawer-article {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--bs-border);
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .bs-drawer-article:last-child {
+      border-bottom: 0;
+    }
+    .bs-drawer-art-thumb {
+      width: 80px;
+      height: 60px;
+      border-radius: 8px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: var(--paper-2, #f1f5f9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--bs-border);
+    }
+    .bs-drawer-art-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.2s ease;
+    }
+    .bs-drawer-article:hover .bs-drawer-art-thumb img {
+      transform: scale(1.05);
+    }
+    .bs-drawer-art-content {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .bs-drawer-art-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--bs-ink);
+      text-decoration: none;
+      line-height: 1.35;
+      transition: color 0.15s ease;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .bs-drawer-art-title:hover {
+      color: var(--accent, #ea580c);
+    }
+    .bs-drawer-art-meta {
+      font-size: 12px;
+      color: var(--bs-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .bs-hero-grid { grid-template-columns: repeat(2, 1fr); }
+      .bs-industry-grid { grid-template-columns: repeat(2, 1fr); }
+      .bs-results-layout { grid-template-columns: 1fr; }
+      .bs-related-panel { position: static; order: -1; }
+    }
+    @media (max-width: 540px) {
+      .bs-hero-grid { grid-template-columns: 1fr; }
+      .bs-industry-grid { grid-template-columns: 1fr; }
+      .bs-fc-header { flex-wrap: wrap; }
+      .bs-fc-actions { width: 100%; justify-content: flex-end; margin-top: 4px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bs-wrap">
+  <!-- Top Tabs Bar -->
+  <div class="bs-tabs">
+    <button type="button" class="bs-tab active" data-tab="websites">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+      <span>Websites</span>
+    </button>
+    <button type="button" class="bs-tab" data-tab="reddit">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M16 11c-.5-1.5-2.5-1.5-4 0M8 11c-.5-1.5-2.5-1.5-4 0"/></svg>
+      <span>Reddit</span>
+    </button>
+    <button type="button" class="bs-tab" data-tab="newsletters">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+      <span>Newsletters</span>
+    </button>
+    <button type="button" class="bs-tab" data-tab="google-news">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l6 6v8a2 2 0 01-2 2z"/><path d="M14 4v6h6"/></svg>
+      <span>Google News</span>
+    </button>
+  </div>
+
+  <!-- Search Omnibar with Context Autocomplete -->
+  <div class="bs-search-wrap">
+    <div class="bs-search-row" id="bs-search-row">
+      <div class="bs-search-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+      <input type="text" id="bs-query-input" class="bs-search-input" placeholder="Search by topic, website, or RSS link" autocomplete="off" />
+      <button type="button" id="bs-clear-btn" class="bs-search-clear" aria-label="Clear search">&times;</button>
+      <div class="bs-lang-wrap">
+        <select class="bs-lang-select" id="bs-lang-select">
+          <option value="en" selected>English</option>
+          <option value="all">All Languages</option>
+          <option value="es">Español</option>
+          <option value="de">Deutsch</option>
+          <option value="fr">Français</option>
+        </select>
+        <svg class="bs-lang-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+    </div>
+
+    <!-- Floating Instant Context Autocomplete Dropdown -->
+    <div class="bs-dropdown" id="bs-autocomplete-dropdown">
+      <!-- Injected dynamically on keystrokes -->
+    </div>
+  </div>
+
+  <!-- ================= EXPLORE MODE VIEW ================= -->
+  <div id="bs-explore-view">
+    <!-- Featured Hero Visual Cards -->
+    <div class="bs-hero-grid">
+      <div class="bs-hero-card" data-search="tech" style="background-color: #1e1b4b; background-image: url('https://images.unsplash.com/photo-1593508512255-86ab42a8e620?auto=format&fit=crop&w=500&q=80');">
+        <div class="bs-hero-title">Tech</div>
+      </div>
+      <div class="bs-hero-card" data-search="cybersecurity" style="background-color: #022c22; background-image: url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=500&q=80');">
+        <div class="bs-hero-title">Cybersecurity</div>
+      </div>
+      <div class="bs-hero-card" data-search="marketing" style="background-color: #0c4a6e; background-image: url('https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=500&q=80');">
+        <div class="bs-hero-title">Marketing</div>
+      </div>
+      <div class="bs-hero-card" data-search="business" style="background-color: #78350f; background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=500&q=80');">
+        <div class="bs-hero-title">Business</div>
+      </div>
+    </div>
+
+    <!-- Section: Industries -->
+    <div class="bs-section-title">Industries</div>
+    <div class="bs-industry-grid" id="bs-industries-container">
+      <!-- Injected via JS -->
+    </div>
+
+    <!-- Section: Sports & Passions -->
+    <div class="bs-section-title">Sports &amp; Global Competitions</div>
+    <div class="bs-industry-grid" id="bs-sports-container">
+      <!-- Injected via JS -->
+    </div>
+
+    <!-- Section: Skills & Specialized Topics -->
+    <div class="bs-section-title">Skills &amp; Deep Tech</div>
+    <div class="bs-industry-grid" id="bs-skills-container">
+      <!-- Injected via JS -->
+    </div>
+  </div>
+
+  <!-- ================= RESULTS MODE VIEW ================= -->
+  <div id="bs-results-view">
+    <div class="bs-results-layout">
+      <!-- Left: Feeds Column -->
+      <div class="bs-main-column">
+        <div class="bs-sort-row">
+          <label style="font-size:13px;color:var(--bs-muted);display:flex;align-items:center;gap:6px;">
+            <span>Sorting by:</span>
+            <select id="bs-sort-select" class="bs-sort-select">
+              <option value="best">Best match</option>
+              <option value="followers">Most followers</option>
+              <option value="frequency">Publish frequency</option>
+            </select>
+          </label>
+          <span id="bs-results-count" style="font-size:12px;font-weight:600;color:var(--bs-muted);"></span>
+        </div>
+
+        <div class="bs-feed-list" id="bs-feed-list">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- Right: Sticky Related Topics Side Panel -->
+      <div class="bs-side-column">
+        <div class="bs-related-panel">
+          <div class="bs-rp-title">Related topics</div>
+          <div class="bs-rp-tags" id="bs-related-tags">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="bs-toast" class="bs-toast" style="display:none;"></div>
+
+<!-- Feed Detail Preview Side Drawer Modal -->
+<div id="bs-drawer-backdrop" class="bs-drawer-backdrop"></div>
+<div id="bs-drawer" class="bs-drawer" role="dialog" aria-modal="true">
+  <div class="bs-drawer-header">
+    <div id="bs-drawer-logo" class="bs-fc-logo"></div>
+    <div class="bs-fc-title-group">
+      <div id="bs-drawer-title" class="bs-fc-title" style="font-size:17px;"></div>
+      <div class="bs-fc-subinfo" style="margin-top:2px;">
+        <a id="bs-drawer-domain" href="#" target="_blank" rel="noopener noreferrer" class="bs-fc-domain"></a>
+      </div>
+    </div>
+    <button type="button" id="bs-drawer-close-btn" class="bs-drawer-close" aria-label="Close drawer">&times;</button>
+  </div>
+  <div class="bs-drawer-body">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <span id="bs-drawer-articles-count" style="font-size:12px;font-weight:700;color:var(--bs-muted);text-transform:uppercase;letter-spacing:0.5px;">Latest Coverage</span>
+      <div id="bs-drawer-action-wrap"></div>
+    </div>
+    <div id="bs-drawer-articles-list">
+      <!-- Injected via JS -->
+    </div>
+  </div>
+</div>
+
+<!-- Core App Scripts -->
+<script src="scripts/feedometer-config.js"></script>
+<script src="scripts/feedometer-auth.js"></script>
+<script src="scripts/watchlists-api.js"></script>
+<script src="scripts/follow-folder-modal.js"></script>
+
+<!-- Browse Sources Controller Script -->
+<script>
+(function (w) {
+  'use strict';
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ── Master Knowledge Base: 150+ Verified Publications & Feeds ─ */
+  var MASTER_FEEDS = [
+    /* ── Cricket Feeds ── */
+    {
+      id: 'pf_cricket365',
+      topics: ['cricket', 'sports', 'ipl', 'ashes'],
+      title: 'Cricket365',
+      domain: 'cricket365.com',
+      feedUrl: 'https://www.cricket365.com/feed/',
+      logoText: 'C365',
+      logoBg: '#15803d',
+      logoColor: '#ffffff',
+      desc: 'Love the game as much as we do. Breaking cricket news, test match features, ODI venues, and tactical analysis.',
+      articles: [
+        'The 7 most prolific ODI venues in world cricket — and why',
+        'Will drop-in pitches harm the 2027 Cricket World Cup?',
+        '7 completed Tests with the lowest aggregate scores in history',
+        'Tactical review: Fast bowling rotations ahead of marquee test series'
+      ],
+      followers: '184',
+      relevance: 99,
+      articlesPerWeek: '4 articles per week'
+    },
+    {
+      id: 'pf_cricketcountry',
+      topics: ['cricket', 'sports', 'ipl', 'bcci'],
+      title: 'Cricket Country',
+      domain: 'cricketcountry.com',
+      feedUrl: 'https://www.cricketcountry.com/feed/',
+      logoText: 'CC',
+      logoBg: '#d97706',
+      logoColor: '#ffffff',
+      desc: 'Live Cricket News - Latest cricket updates, live cricket scores, cricket fan blogs, and world cup history discussions.',
+      articles: [
+        'Ashwin hints at surprise candidate for IPL head coach role after finals',
+        'Franchises begin off-season training camp with emerging domestic pace prospects',
+        'Top order batting strategies against swing in overseas conditions',
+        'Domestic cricket round-up: Standout all-round performances of the week'
+      ],
+      followers: '80',
+      relevance: 96,
+      articlesPerWeek: '14 articles per week'
+    },
+    {
+      id: 'pf_cricinfo',
+      topics: ['cricket', 'sports', 'ipl', 'icc', 'bcci'],
+      title: 'Cricket news from Cricinfo.com',
+      domain: 'espncricinfo.com',
+      feedUrl: 'https://www.espncricinfo.com/rss/content/story/feeds/0.xml',
+      logoText: 'CI',
+      logoBg: '#0097ec',
+      logoColor: '#ffffff',
+      desc: 'Ball-by-ball cricket scores, international match reports, stats archives, IPL fixtures, and global player rankings.',
+      articles: [
+        'Match preview: Tactical battles in upcoming test match series',
+        'IPL mega auction insights: Squad combinations and marquee targets',
+        'Stat attack: Unpacking bowling economy rates in death overs',
+        'In-depth interview: Leadership lessons under intense pressure'
+      ],
+      followers: '65K',
+      relevance: 98,
+      articlesPerWeek: '340 articles per week'
+    },
+    {
+      id: 'pf_cricbuzz',
+      topics: ['cricket', 'sports', 'ipl', 't20'],
+      title: 'Cricbuzz Latest News',
+      domain: 'cricbuzz.com',
+      feedUrl: 'https://www.cricbuzz.com/rss/news',
+      logoText: 'CB',
+      logoBg: '#009270',
+      logoColor: '#ffffff',
+      desc: 'Fastest live cricket scores, breaking team selections, pitch reports, and post-match analysis from veteran commentators.',
+      articles: [
+        'World Cup roadmap: Key player combinations under review',
+        'Pitch report and weather forecast for today\'s blockbuster clash',
+        'Player interview: The mindset behind chasing in high-pressure games',
+        'Domestic cricket round-up: Young talents shining bright'
+      ],
+      followers: '54K',
+      relevance: 95,
+      articlesPerWeek: '280 articles per week'
+    },
+    {
+      id: 'pf_guardian_cricket',
+      topics: ['cricket', 'sports', 'ashes', 'england'],
+      title: 'Cricket | The Guardian',
+      domain: 'theguardian.com',
+      feedUrl: 'https://www.theguardian.com/sport/cricket/rss',
+      logoText: 'G',
+      logoBg: '#052962',
+      logoColor: '#ffffff',
+      desc: 'The Guardian\'s award-winning cricket journalism, County Championship coverage, international retrospectives and live over-by-over commentary.',
+      articles: [
+        'The changing dynamics of test match pitch preparation',
+        'County Championship: Spinners take center stage on turning wickets',
+        'Tactical dissection: Fielding placements against aggressive top-orders',
+        'Book excerpt: The great rivalries that defined the modern era'
+      ],
+      followers: '28K',
+      relevance: 93,
+      articlesPerWeek: '42 articles per week'
+    },
+    {
+      id: 'pf_ndtv_cricket',
+      topics: ['cricket', 'sports', 'india', 'ipl', 'bcci'],
+      title: 'NDTV Sports — Cricket',
+      domain: 'ndtv.com',
+      feedUrl: 'https://sports.ndtv.com/cricket/rss',
+      logoText: 'NDTV',
+      logoBg: '#cc0000',
+      logoColor: '#ffffff',
+      desc: 'NDTV provides breaking news and in-depth coverage of Indian and international cricket, match scorecards, and expert opinions.',
+      articles: [
+        'Rohit Sharma and coaching staff strategize team balance for upcoming series',
+        'Expert panel debate: Top 5 performers in the domestic tournament',
+        'Injury updates and fitness reports ahead of international departure',
+        'Record-breaking centuries: Reliving iconic moments in cricket history'
+      ],
+      followers: '84',
+      relevance: 91,
+      articlesPerWeek: '223 articles per week'
+    },
+    {
+      id: 'pf_reddit_cricket',
+      topics: ['cricket', 'sports', 'reddit', 'ipl'],
+      title: 'r/Cricket',
+      domain: 'reddit.com/r/Cricket',
+      feedUrl: 'https://www.reddit.com/r/Cricket/.rss',
+      logoText: 'r/',
+      logoBg: '#ff4500',
+      logoColor: '#ffffff',
+      desc: 'The vibrant Reddit cricket community with live match threads, deep statistical analysis, player appreciation, and grassroots stories.',
+      articles: [
+        'Match Thread: International Test Match - Day 3 Discussion',
+        'Post-Match Thread: Dramatic final-over thriller finishes in tie',
+        'Statistical deep dive: Average run rates across powerplays from 2020-2026',
+        'Memorable grassroots stories: The spirit of club cricket worldwide'
+      ],
+      followers: '71',
+      relevance: 90,
+      articlesPerWeek: '238 articles per week'
+    },
+    {
+      id: 'pf_wisden_cricket',
+      topics: ['cricket', 'sports', 'ashes', 'test cricket'],
+      title: 'Wisden Cricket',
+      domain: 'wisden.com',
+      feedUrl: 'https://www.wisden.com/feed',
+      logoText: 'W',
+      logoBg: '#ffd200',
+      logoColor: '#1a1a1a',
+      desc: 'The historic voice of cricket since 1864. Thoughtful essays, player ratings, historic test rankings, and county championships.',
+      articles: [
+        'Greatest spells of fast bowling in modern Test history',
+        'Tactical evolution: How spin bowlers are adapting to shorter formats',
+        'County Championship digest: Standout innings of the week',
+        'The definitive history of iconic cricket venues and traditions'
+      ],
+      followers: '18K',
+      relevance: 90,
+      articlesPerWeek: '45 articles per week'
+    },
+    {
+      id: 'pf_fox_cricket',
+      topics: ['cricket', 'sports', 'australia', 'big bash'],
+      title: 'Cricket | FOX SPORTS',
+      domain: 'foxsports.com.au',
+      feedUrl: 'https://www.foxsports.com.au/content-feeds/cricket/',
+      logoText: 'FOX',
+      logoBg: '#0f172a',
+      logoColor: '#ffffff',
+      desc: 'Live scores, breaking cricket news, Australian test team selections, Big Bash League coverage, and exclusive video highlights.',
+      articles: [
+        'Aussie pace trio primed for high-octane summer showdown',
+        'Big Bash League trade window opens with blockbuster swaps',
+        'Selection dilemmas: Who takes the vacant opening batting slot?',
+        'State cricket recap: Fast bowlers light up domestic championship'
+      ],
+      followers: '22K',
+      relevance: 89,
+      articlesPerWeek: '88 articles per week'
+    },
+    {
+      id: 'pf_indianexpress_cricket',
+      topics: ['cricket', 'sports', 'india', 'bcci'],
+      title: 'Cricket | The Indian Express',
+      domain: 'indianexpress.com',
+      feedUrl: 'https://indianexpress.com/section/sports/cricket/feed/',
+      logoText: 'IE',
+      logoBg: '#b91c1c',
+      logoColor: '#ffffff',
+      desc: 'Deep investigative sports journalism, human-interest athlete features, pitch dissections, and domestic tournament insights.',
+      articles: [
+        'The grassroots coaches shaping India\'s next generation of fast bowlers',
+        'Tactical analysis: How field setups choke scoring in the middle overs',
+        'Behind closed doors: How national selectors balance youth and experience',
+        'Ranji Trophy highlights: Gritty hundreds on seaming winter pitches'
+      ],
+      followers: '32K',
+      relevance: 88,
+      articlesPerWeek: '75 articles per week'
+    },
+
+    /* ── Football & Clubs Feeds ── */
+    {
+      id: 'pf_bbcsport_fb',
+      topics: ['football', 'soccer', 'sports', 'premier league', 'champions league'],
+      title: 'BBC Sport — Football',
+      domain: 'bbc.co.uk',
+      feedUrl: 'http://feeds.bbci.co.uk/sport/football/rss.xml',
+      logoText: 'BBC',
+      logoBg: '#ffd200',
+      logoColor: '#000000',
+      desc: 'Premier sports news and live coverage including scores, results, transfer gossip, and European cup analysis.',
+      articles: [
+        'Premier League title race: Tactical breakdown of the contenders',
+        'Champions League knockout stage preview: Key match-ups',
+        'European transfer radar: Major summer targets under review',
+        'Tactical masterclass: How inverted wingbacks control transitions'
+      ],
+      followers: '40K',
+      relevance: 98,
+      articlesPerWeek: '575 articles per week'
+    },
+    {
+      id: 'pf_guardian_fb',
+      topics: ['football', 'soccer', 'sports', 'premier league'],
+      title: 'Football | The Guardian',
+      domain: 'theguardian.com',
+      feedUrl: 'https://www.theguardian.com/football/rss',
+      logoText: 'G',
+      logoBg: '#052962',
+      logoColor: '#ffffff',
+      desc: 'Latest football news, comment and analysis from the Guardian, the world\'s leading voice in football journalism.',
+      articles: [
+        'Premier League: 10 tactical things to look out for this weekend',
+        'Inside the training ground: Modern sports science in elite football',
+        'Financial sustainability rules: How European clubs are adapting',
+        'The rising stars dominating youth academies across Europe'
+      ],
+      followers: '30K',
+      relevance: 95,
+      articlesPerWeek: '129 articles per week'
+    },
+    {
+      id: 'pf_arseblog',
+      topics: ['arsenal', 'football', 'soccer', 'premier league'],
+      title: 'Arseblog Arsecast, The Arsenal Podcast',
+      domain: 'arseblog.com',
+      feedUrl: 'https://arseblog.com/feed/',
+      logoText: '🔴',
+      logoBg: '#ffffff',
+      logoColor: '#db0007',
+      desc: 'The original Arsenal podcast and blog — match previews, tactical discussions, player interviews, and fan analysis.',
+      articles: [
+        'Arsecast Extra: Post-match reflections and midfield chemistry',
+        'Tactical Analysis: How inverted fullbacks control the transition',
+        'Arsenal Women: Pre-season preparations and key signing highlights',
+        'Academy Spotlight: The next generation breaking into the first team'
+      ],
+      followers: '7K',
+      relevance: 98,
+      articlesPerWeek: '4 articles per week'
+    },
+    {
+      id: 'pf_arsenal_fc_news',
+      topics: ['arsenal', 'football', 'soccer', 'premier league'],
+      title: 'Arsenal FC News Feed',
+      domain: 'feeds.arsenal.com',
+      feedUrl: 'https://www.arsenal.com/rss/news.xml',
+      logoText: 'AFC',
+      logoBg: '#db0007',
+      logoColor: '#ffffff',
+      desc: 'Arsenal Football Club Official Website: get the latest club news, highlights, fixtures, training photos and press conferences.',
+      articles: [
+        'Team News: Squad updates ahead of the weekend clash',
+        'Manager Press Conference: Quotes on team spirit and tactical focus',
+        'Behind the scenes at London Colney training complex',
+        'Ticket and fixture updates for upcoming European nights'
+      ],
+      followers: '6K',
+      relevance: 97,
+      articlesPerWeek: '12 articles per week'
+    },
+    {
+      id: 'pf_guardian_arsenal',
+      topics: ['arsenal', 'football', 'soccer', 'premier league'],
+      title: 'Arsenal | The Guardian',
+      domain: 'theguardian.com',
+      feedUrl: 'https://www.theguardian.com/football/arsenal/rss',
+      logoText: 'G',
+      logoBg: '#052962',
+      logoColor: '#ffffff',
+      desc: 'Read the latest Arsenal news, transfer rumours, match reports, fixtures and live scores from Guardian sports journalists.',
+      articles: [
+        'How Arsenal\'s defensive structure became the best in the league',
+        'Set-piece mastery: The detailed coaching creating goals from corners',
+        'Midfield evolution: Balancing control with attacking velocity',
+        'Contract extensions: Securing the core foundation for long-term success'
+      ],
+      followers: '1K',
+      relevance: 94,
+      articlesPerWeek: '12 articles per week'
+    },
+    {
+      id: 'pf_skysports_fb',
+      topics: ['football', 'soccer', 'sports', 'premier league'],
+      title: 'SkySports | News',
+      domain: 'skysports.com',
+      feedUrl: 'https://www.skysports.com/rss/12040',
+      logoText: 'sky',
+      logoBg: '#001944',
+      logoColor: '#ffffff',
+      desc: 'Watch the best live coverage of football, Premier League, UEFA Champions League, and breaking transfer updates.',
+      articles: [
+        'Derby delight: Post-match analysis, manager reactions and ratings',
+        'Transfer Centre LIVE! Latest news and contract developments',
+        'Expert debate: The toughest remaining schedule in the title charge',
+        'VAR decisions scrutinized in weekly referee review'
+      ],
+      followers: '51K',
+      relevance: 91,
+      articlesPerWeek: '141 articles per week'
+    },
+    {
+      id: 'pf_football365',
+      topics: ['football', 'soccer', 'sports', 'premier league'],
+      title: 'Football365',
+      domain: 'football365.com',
+      feedUrl: 'https://www.football365.com/feed',
+      logoText: 'F365',
+      logoBg: '#0f172a',
+      logoColor: '#ffffff',
+      desc: 'Irreverent, passionate and sharp football opinions, mailbox debates, tactical dissections, and transfer winners and losers.',
+      articles: [
+        'Winners and losers from the weekend\'s Premier League action',
+        '16 Conclusions: Tactical takeaways from the heavyweight clash',
+        'Transfer gossip: Heavyweights prepare huge bids for breakout striker',
+        'The Mediawatch: Scrutinizing the biggest talking points in the press'
+      ],
+      followers: '24K',
+      relevance: 89,
+      articlesPerWeek: '85 articles per week'
+    },
+    {
+      id: 'pf_reddit_soccer',
+      topics: ['football', 'soccer', 'sports', 'reddit'],
+      title: 'r/soccer',
+      domain: 'reddit.com/r/soccer',
+      feedUrl: 'https://www.reddit.com/r/soccer/.rss',
+      logoText: 'r/',
+      logoBg: '#ff4500',
+      logoColor: '#ffffff',
+      desc: 'The largest global football community on Reddit with instant goal clips, tactical threads, and match discussion.',
+      articles: [
+        '[Goal] Stunning 30-yard volley in 89th minute seals thrilling victory',
+        'Post-Match Thread: Champions League Semi-Final Leg 1',
+        'Tactical Discussion: High press triggers vs mid-block formations',
+        'Official Club Announcement: Contract renewal signed through 2030'
+      ],
+      followers: '95K',
+      relevance: 92,
+      articlesPerWeek: '520 articles per week'
+    },
+    {
+      id: 'pf_reddit_liverpool',
+      topics: ['liverpool', 'football', 'soccer', 'sports', 'premier league'],
+      title: 'r/LiverpoolFC',
+      domain: 'reddit.com/r/LiverpoolFC',
+      feedUrl: 'https://www.reddit.com/r/LiverpoolFC/.rss',
+      logoText: 'LFC',
+      logoBg: '#c8102e',
+      logoColor: '#ffffff',
+      desc: 'Reddit community for Liverpool FC supporters — match threads, tactical discussions, academy updates, and player news.',
+      articles: [
+        'Pre-Match Thread: Liverpool vs Rivals at Anfield',
+        'Tactical Review: How midfield transitions unlocked the low block',
+        'Klopp legacy and modern tactical identity under new management',
+        'Academy Watch: Young winger scores hat-trick in youth cup'
+      ],
+      followers: '45K',
+      relevance: 90,
+      articlesPerWeek: '160 articles per week'
+    },
+
+    /* ── Tech, AI & Cybersecurity Feeds ── */
+    {
+      id: 'pf_thehackernews',
+      topics: ['cybersecurity', 'tech', 'security', 'infosec', 'hacker news'],
+      title: 'The Hacker News',
+      domain: 'thehackernews.com',
+      feedUrl: 'https://feeds.feedburner.com/TheHackersNews',
+      logoText: 'THN',
+      logoBg: '#d92727',
+      logoColor: '#ffffff',
+      desc: 'The most trusted, widely-read independent cybersecurity news source covering malware analysis, zero-days, and breaches.',
+      articles: [
+        'Critical zero-day vulnerability patched in popular web framework',
+        'Ransomware group deploys novel evasion techniques against EDR',
+        'Cloud configuration checklist: Hardening production environments',
+        'Supply chain attack vector analyzed in open-source packages'
+      ],
+      followers: '72K',
+      relevance: 98,
+      articlesPerWeek: '42 articles per week'
+    },
+    {
+      id: 'pf_theverge',
+      topics: ['tech', 'technology', 'gadgets', 'ai', 'science'],
+      title: 'The Verge',
+      domain: 'theverge.com',
+      feedUrl: 'https://www.theverge.com/rss/index.xml',
+      logoText: 'V',
+      logoBg: '#e11d48',
+      logoColor: '#ffffff',
+      desc: 'Covers the intersection of technology, science, art, and culture. Hardware reviews, AI developments, and big tech regulatory news.',
+      articles: [
+        'Next-generation flagship smartphones tested and benchmarked',
+        'AI search engines enter a new phase of multimodal reasoning',
+        'Electric vehicle charging infrastructure reaches major milestone',
+        'Operating system deep dive: What new features matter most'
+      ],
+      followers: '90K',
+      relevance: 98,
+      articlesPerWeek: '180 articles per week'
+    },
+    {
+      id: 'pf_techcrunch',
+      topics: ['tech', 'technology', 'startups', 'venture capital', 'ai', 'business'],
+      title: 'TechCrunch',
+      domain: 'techcrunch.com',
+      feedUrl: 'https://techcrunch.com/feed/',
+      logoText: 'TC',
+      logoBg: '#00a562',
+      logoColor: '#ffffff',
+      desc: 'The leading publisher covering startups, venture capital funding rounds, Silicon Valley developments, and emerging tech breakthroughs.',
+      articles: [
+        'Generative AI startup closes $100M Series B at unicorn valuation',
+        'Early-stage founders share lessons on scaling enterprise sales',
+        'Venture capital trends: Where seed investments are flowing in 2026',
+        'Fintech disruptor launches instant cross-border settlement rails'
+      ],
+      followers: '85K',
+      relevance: 96,
+      articlesPerWeek: '150 articles per week'
+    },
+    {
+      id: 'pf_arstechnica',
+      topics: ['tech', 'technology', 'science', 'software', 'hardware'],
+      title: 'Ars Technica',
+      domain: 'arstechnica.com',
+      feedUrl: 'https://feeds.arstechnica.com/arstechnica/index',
+      logoText: 'ARS',
+      logoBg: '#ff4e00',
+      logoColor: '#ffffff',
+      desc: 'Original tech journalism, scientific exploration, hardware deep dives, space flight analysis, and digital policy debates.',
+      articles: [
+        'CPU architecture comparison: Microarchitectures under microscope',
+        'Space exploration: Orbital observatory delivers breathtaking imagery',
+        'Linux kernel updates enhance memory management on high-core CPUs',
+        'Security review: Evaluating quantum-resistant cryptography'
+      ],
+      followers: '60K',
+      relevance: 94,
+      articlesPerWeek: '70 articles per week'
+    },
+    {
+      id: 'pf_bleepingcomputer',
+      topics: ['cybersecurity', 'tech', 'security', 'malware'],
+      title: 'BleepingComputer',
+      domain: 'bleepingcomputer.com',
+      feedUrl: 'https://www.bleepingcomputer.com/feed/',
+      logoText: 'BC',
+      logoBg: '#0f172a',
+      logoColor: '#ffffff',
+      desc: 'Premium cybersecurity, tech support, and threat intelligence publication offering deep dives into cyberattacks and patch advisories.',
+      articles: [
+        'Emergency security updates released for enterprise VPNs',
+        'Phishing campaign uses weaponized PDF attachments to bypass filters',
+        'New decryptor released for victims of prominent ransomware strain',
+        'Security researchers uncover sophisticated API token leakage'
+      ],
+      followers: '48K',
+      relevance: 94,
+      articlesPerWeek: '65 articles per week'
+    },
+
+    /* ── Automotive & Mobility Feeds ── */
+    {
+      id: 'pf_autoblog',
+      topics: ['automotive', 'cars', 'ev', 'mobility', 'supercars', 'tesla'],
+      title: 'Autoblog',
+      domain: 'autoblog.com',
+      feedUrl: 'https://www.autoblog.com/rss.xml',
+      logoText: 'AB',
+      logoBg: '#dc2626',
+      logoColor: '#ffffff',
+      desc: 'Latest car reviews, automotive industry news, auto show reveals, EV comparisons, and road test ratings.',
+      articles: [
+        'First Drive: Next-gen electric SUV delivers impressive range and handling',
+        'Auto Show Preview: The most anticipated concept debuts of the year',
+        'Buyer\'s Guide: Best hybrid and plug-in vehicles ranked by value',
+        'Spy Shots: Camouflaged prototype spotted testing on the Nürburgring'
+      ],
+      followers: '42K',
+      relevance: 98,
+      articlesPerWeek: '95 articles per week'
+    },
+    {
+      id: 'pf_motortrend',
+      topics: ['automotive', 'cars', 'motorsport', 'supercars'],
+      title: 'MotorTrend',
+      domain: 'motortrend.com',
+      feedUrl: 'https://www.motortrend.com/feed/',
+      logoText: 'MT',
+      logoBg: '#b91c1c',
+      logoColor: '#ffffff',
+      desc: 'Expert automotive news, in-depth car reviews, performance head-to-head comparisons, and Car of the Year awards.',
+      articles: [
+        'Head 2 Head: Flagship German luxury sedan vs American electric titan',
+        'Performance Benchmark: 0-60 mph test results across performance coupes',
+        'Car of the Year: The standout vehicle that redefined its category',
+        'Classic Car Retrospective: The timeless icons of motorsport heritage'
+      ],
+      followers: '56K',
+      relevance: 96,
+      articlesPerWeek: '120 articles per week'
+    },
+    {
+      id: 'pf_electrek_auto',
+      topics: ['automotive', 'ev', 'electric vehicles', 'tesla', 'clean energy', 'mobility'],
+      title: 'Electrek — Electric Vehicles & EV News',
+      domain: 'electrek.co',
+      feedUrl: 'https://electrek.co/feed/',
+      logoText: 'ELK',
+      logoBg: '#059669',
+      logoColor: '#ffffff',
+      desc: 'Tracking the transition from fossil fuel transportation to electric power with news on Tesla, EVs, batteries, and charging networks.',
+      articles: [
+        'Next-generation battery technology promises 600-mile real-world EV range',
+        'Global EV sales surge past new milestones as charging corridors expand',
+        'Tesla Full Self-Driving and software release notes analysis',
+        'Automakers announce joint megawatt charging network for commercial fleets'
+      ],
+      followers: '68K',
+      relevance: 97,
+      articlesPerWeek: '85 articles per week'
+    },
+    {
+      id: 'pf_caranddriver',
+      topics: ['automotive', 'cars', 'reviews', 'supercars'],
+      title: 'Car and Driver',
+      domain: 'caranddriver.com',
+      feedUrl: 'https://www.caranddriver.com/rss/all.xml',
+      logoText: 'C/D',
+      logoBg: '#0f172a',
+      logoColor: '#ffffff',
+      desc: 'Authoritative instrumented road tests, buyer advice, auto rankings, and industry insights from veteran automotive journalists.',
+      articles: [
+        'Lightning Lap: The fastest production cars tested on track',
+        '10Best Cars and Trucks: The undisputed pinnacle of modern driving',
+        'In-Depth Review: Turbocharged sports sedan puts rivals on notice',
+        'Instrumented Test: Braking distances, skidpad Gs and powertrain telemetry'
+      ],
+      followers: '49K',
+      relevance: 95,
+      articlesPerWeek: '110 articles per week'
+    },
+    {
+      id: 'pf_jalopnik',
+      topics: ['automotive', 'cars', 'motorsport', 'mobility'],
+      title: 'Jalopnik',
+      domain: 'jalopnik.com',
+      feedUrl: 'https://jalopnik.com/rss',
+      logoText: 'JAL',
+      logoBg: '#d97706',
+      logoColor: '#ffffff',
+      desc: 'Sharp, entertaining car news, vehicle culture, racing commentary, transport oddities, and fearless car reviews.',
+      articles: [
+        'Why this affordable sports car is the best enthusiast buy on the market',
+        'The engineering secrets behind modern endurance race cars',
+        'Investigation: What happens to decommissioned electric car batteries',
+        'The wildest custom build projects from garage fabricators'
+      ],
+      followers: '35K',
+      relevance: 92,
+      articlesPerWeek: '75 articles per week'
+    },
+
+    /* ── Politics & World Affairs Feeds ── */
+    {
+      id: 'pf_politico_main',
+      topics: ['politics', 'us politics', 'white house', 'congress', 'donald trump', 'elections'],
+      title: 'Politico',
+      domain: 'politico.com',
+      feedUrl: 'https://rss.politico.com/politics-news.xml',
+      logoText: 'POL',
+      logoBg: '#be123c',
+      logoColor: '#ffffff',
+      desc: 'The authoritative source for political news, policy insights, campaign strategies, and insider reporting from Washington.',
+      articles: [
+        'Inside the strategy room: How campaign teams are positioning ahead of elections',
+        'Behind closed doors: Congressional leaders negotiate marquee legislative package',
+        'Fundraising disclosures: Where major donors are allocating capital',
+        'Executive orders and regulatory reviews under the microscope'
+      ],
+      followers: '82K',
+      relevance: 98,
+      articlesPerWeek: '190 articles per week'
+    },
+    {
+      id: 'pf_thehill_main',
+      topics: ['politics', 'congress', 'senate', 'white house', 'donald trump', 'policy'],
+      title: 'The Hill',
+      domain: 'thehill.com',
+      feedUrl: 'https://thehill.com/feed/',
+      logoText: 'HILL',
+      logoBg: '#0f172a',
+      logoColor: '#ffffff',
+      desc: 'Essential news for and about Capitol Hill, policy decisions, White House briefings, committee hearings, and political debates.',
+      articles: [
+        'Lawmakers introduce bipartisan measures amid ongoing national policy debate',
+        'White House press briefing: Key announcements and administration priorities',
+        'Senate vote tallies and swing votes on critical executive nominations',
+        'Polling breakdown: How battleground states are shifting on economic issues'
+      ],
+      followers: '65K',
+      relevance: 96,
+      articlesPerWeek: '210 articles per week'
+    },
+    {
+      id: 'pf_reuters_world',
+      topics: ['world news', 'politics', 'reuters', 'diplomacy', 'international'],
+      title: 'Reuters — World News',
+      domain: 'reuters.com',
+      feedUrl: 'https://www.reutersagency.com/feed/?best-topics=world&post_type=best',
+      logoText: 'R',
+      logoBg: '#ea580c',
+      logoColor: '#ffffff',
+      desc: 'Unbiased, factual international news, diplomatic relations, and global economic reporting from correspondents worldwide.',
+      articles: [
+        'Diplomatic summits conclude with multilateral trade and security pacts',
+        'Global economic indicators: Inflation trends and central bank forecasts',
+        'Fact-checked summary of major international policy pronouncements',
+        'Humanitarian and environmental reports from frontline regions'
+      ],
+      followers: '92K',
+      relevance: 97,
+      articlesPerWeek: '380 articles per week'
+    },
+    {
+      id: 'pf_reddit_politics_main',
+      topics: ['politics', 'us politics', 'reddit', 'donald trump', 'discussions'],
+      title: 'r/politics',
+      domain: 'reddit.com/r/politics',
+      feedUrl: 'https://www.reddit.com/r/politics/.rss',
+      logoText: 'r/',
+      logoBg: '#ff4500',
+      logoColor: '#ffffff',
+      desc: 'Reddit\'s main political discussion community with breaking news links, live megathreads, and public debate.',
+      articles: [
+        'Megathread: Live reactions to the latest press conference and policy address',
+        'Discussion: The electoral implications of newly released polling data',
+        'Deep dive: Historical comparisons with previous legislative sessions',
+        'State legislature updates and grassroots campaign organization'
+      ],
+      followers: '98K',
+      relevance: 93,
+      articlesPerWeek: '550 articles per week'
+    },
+
+    /* ── Clean Energy & Climate Feeds ── */
+    {
+      id: 'pf_cleantechnica',
+      topics: ['clean energy', 'solar', 'wind power', 'sustainability', 'climate', 'energy storage', 'batteries'],
+      title: 'CleanTechnica',
+      domain: 'cleantechnica.com',
+      feedUrl: 'https://cleantechnica.com/feed/',
+      logoText: 'CT',
+      logoBg: '#16a34a',
+      logoColor: '#ffffff',
+      desc: 'The #1 clean tech news site covering solar power, clean energy, wind energy, electric vehicles, energy storage, and sustainability.',
+      articles: [
+        'Utility-scale solar installations set new record for grid capacity additions',
+        'Next-gen sodium-ion batteries reach commercial scale for grid storage',
+        'Offshore wind farms expand with deep-water floating turbine designs',
+        'Grid parity: How renewable energy economics are transforming utilities'
+      ],
+      followers: '38K',
+      relevance: 97,
+      articlesPerWeek: '75 articles per week'
+    },
+    {
+      id: 'pf_canary_media',
+      topics: ['clean energy', 'climate', 'sustainability', 'energy storage'],
+      title: 'Canary Media',
+      domain: 'canarymedia.com',
+      feedUrl: 'https://www.canarymedia.com/feed',
+      logoText: 'CM',
+      logoBg: '#eab308',
+      logoColor: '#000000',
+      desc: 'Independent journalism at the forefront of the clean energy transition, carbon removal, and climate tech innovations.',
+      articles: [
+        'How geothermal power is gaining momentum with advanced drilling techniques',
+        'Industrial decarbonization: Green hydrogen pilot projects begin operation',
+        'Transmission line upgrades unlock stranded renewable power in the Midwest',
+        'Smart grid orchestration software balances peak demand loads'
+      ],
+      followers: '24K',
+      relevance: 95,
+      articlesPerWeek: '40 articles per week'
+    },
+
+    /* ── Biopharma & Healthcare Feeds ── */
+    {
+      id: 'pf_fiercebiotech',
+      topics: ['biopharma', 'biotech', 'pharma', 'medicine', 'clinical trials', 'healthcare'],
+      title: 'Fierce Biotech',
+      domain: 'fiercebiotech.com',
+      feedUrl: 'https://www.fiercebiotech.com/rss/xml',
+      logoText: 'FB',
+      logoBg: '#0284c7',
+      logoColor: '#ffffff',
+      desc: 'Biotech industry news on drug discovery, clinical trials, FDA approvals, life sciences venture funding, and pharma deals.',
+      articles: [
+        'Phase 3 clinical trial yields statistically significant efficacy in oncology',
+        'FDA grants accelerated approval for novel gene editing therapy',
+        'Early-stage biotech secures $80M Series A for targeted protein degradation',
+        'Big pharma expands antibody-drug conjugate pipeline through strategic buyout'
+      ],
+      followers: '31K',
+      relevance: 97,
+      articlesPerWeek: '60 articles per week'
+    },
+    {
+      id: 'pf_statnews',
+      topics: ['biopharma', 'healthcare', 'medicine', 'pharma', 'science'],
+      title: 'STAT News',
+      domain: 'statnews.com',
+      feedUrl: 'https://www.statnews.com/feed/',
+      logoText: 'STAT',
+      logoBg: '#7c3aed',
+      logoColor: '#ffffff',
+      desc: 'In-depth reporting from the frontiers of health, medicine, life sciences, healthcare policy, and biotechnology.',
+      articles: [
+        'Inside the race to engineer next-generation cellular immunotherapies',
+        'Healthcare economics: The true cost of rare disease therapeutics',
+        'Bioethics review: Regulating generative AI in clinical diagnostic tools',
+        'Public health investigations and emerging pathogen surveillance'
+      ],
+      followers: '45K',
+      relevance: 96,
+      articlesPerWeek: '80 articles per week'
+    },
+
+    /* ── Marketing, Advertising & Media Feeds ── */
+    {
+      id: 'pf_adweek',
+      topics: ['marketing', 'advertising', 'branding', 'business', 'media', 'creative'],
+      title: 'Adweek',
+      domain: 'adweek.com',
+      feedUrl: 'https://www.adweek.com/feed/',
+      logoText: 'AW',
+      logoBg: '#0f172a',
+      logoColor: '#ffffff',
+      desc: 'The leading source of news and insight for marketing, media and advertising professionals covering creative campaigns and brand strategy.',
+      articles: [
+        'Global brands unveil groundbreaking digital storytelling campaigns',
+        'Creator economy insights: How micro-influencers drive conversions',
+        'AI-assisted media planning: Optimizing ROI across channels',
+        'Super Bowl ad retrospective: What made the top commercials resonate'
+      ],
+      followers: '38K',
+      relevance: 95,
+      articlesPerWeek: '65 articles per week'
+    },
+    {
+      id: 'pf_adage',
+      topics: ['marketing', 'advertising', 'branding', 'media', 'creative'],
+      title: 'Ad Age',
+      domain: 'adage.com',
+      feedUrl: 'https://adage.com/rss-feed',
+      logoText: 'AA',
+      logoBg: '#e11d48',
+      logoColor: '#ffffff',
+      desc: 'Global media brand that publishes news, analysis and data on marketing, agency leadership, digital commerce, and creative campaigns.',
+      articles: [
+        'Agency rankings: Top independent creative agencies outperforming peers',
+        'Brand transformation: How legacy retailers are reimagining customer journeys',
+        'Retail media networks capture expanding share of digital ad budgets',
+        'CMO Survey: Prioritizing brand equity vs short-term performance marketing'
+      ],
+      followers: '44K',
+      relevance: 96,
+      articlesPerWeek: '70 articles per week'
+    },
+    {
+      id: 'pf_searchengineland',
+      topics: ['marketing', 'seo', 'growth', 'advertising', 'social media'],
+      title: 'Search Engine Land',
+      domain: 'searchengineland.com',
+      feedUrl: 'https://searchengineland.com/feed',
+      logoText: 'SEL',
+      logoBg: '#0284c7',
+      logoColor: '#ffffff',
+      desc: 'Must-read news and analysis on SEO, PPC, Google search algorithm updates, AI search overviews, and digital marketing strategies.',
+      articles: [
+        'Google core algorithm update: Impact on organic visibility analyzed',
+        'Generative AI search optimization: Structuring content for LLM citations',
+        'PPC bidding tactics: Maximizing conversion value with smart bidding',
+        'Local SEO guide: Optimizing business profiles for map pack rankings'
+      ],
+      followers: '36K',
+      relevance: 94,
+      articlesPerWeek: '50 articles per week'
+    },
+
+    /* ── Real Estate & Retail Feeds ── */
+    {
+      id: 'pf_inman_re',
+      topics: ['real estate', 'housing', 'business', 'investing', 'markets'],
+      title: 'Inman News',
+      domain: 'inman.com',
+      feedUrl: 'https://www.inman.com/feed/',
+      logoText: 'IN',
+      logoBg: '#0f172a',
+      logoColor: '#ffffff',
+      desc: 'The leading real estate news source for agents, brokers, and industry executives covering mortgage trends, technology, and market data.',
+      articles: [
+        'Mortgage rate projections and homebuyer demand indicators for the quarter',
+        'PropTech innovations reshaping residential brokerage workflows',
+        'Commercial real estate report: Adaptive reuse of suburban office spaces',
+        'Top producers reveal strategies for navigating inventory shortages'
+      ],
+      followers: '28K',
+      relevance: 96,
+      articlesPerWeek: '65 articles per week'
+    },
+    {
+      id: 'pf_retaildive',
+      topics: ['retail ecommerce', 'retail', 'ecommerce', 'business', 'marketing'],
+      title: 'Retail Dive',
+      domain: 'retaildive.com',
+      feedUrl: 'https://www.retaildive.com/feeds/news/',
+      logoText: 'RD',
+      logoBg: '#7c3aed',
+      logoColor: '#ffffff',
+      desc: 'In-depth journalism providing retail and e-commerce leaders with insights into direct-to-consumer trends, store tech, and supply chains.',
+      articles: [
+        'Omnichannel fulfillment strategies reducing last-mile delivery costs',
+        'Direct-to-consumer brands expand brick-and-mortar storefront footprints',
+        'Autonomous checkout technology expands in convenience retail chains',
+        'Supply chain optimization: Forecasting seasonal demand with machine learning'
+      ],
+      followers: '22K',
+      relevance: 94,
+      articlesPerWeek: '45 articles per week'
+    },
+
+    /* ── Gaming & Entertainment Feeds ── */
+    {
+      id: 'pf_ign_games',
+      topics: ['gaming', 'entertainment', 'esports', 'reviews'],
+      title: 'IGN',
+      domain: 'ign.com',
+      feedUrl: 'https://feeds.feedburner.com/ign/all',
+      logoText: 'IGN',
+      logoBg: '#dc2626',
+      logoColor: '#ffffff',
+      desc: 'The leading site for video games, movies, comics, hardware reviews, trailers, walk-throughs, and entertainment news.',
+      articles: [
+        'Comprehensive Review: The definitive open-world RPG masterpiece',
+        'Console hardware updates and next-generation graphics benchmarks',
+        'Trailer Breakdown: Hidden easter eggs in upcoming blockbuster movie',
+        'Esports championship grand finals recap and MVP highlights'
+      ],
+      followers: '85K',
+      relevance: 98,
+      articlesPerWeek: '210 articles per week'
+    },
+    {
+      id: 'pf_variety_ent',
+      topics: ['entertainment', 'movies', 'streaming', 'media'],
+      title: 'Variety',
+      domain: 'variety.com',
+      feedUrl: 'https://variety.com/feed/',
+      logoText: 'VAR',
+      logoBg: '#be123c',
+      logoColor: '#ffffff',
+      desc: 'The premier source of entertainment news covering film, television, streaming economics, music, and Hollywood industry deals.',
+      articles: [
+        'Box Office breakdown: International markets fuel record opening weekend',
+        'Streaming wars: Platform subscriber growth and content spending outlook',
+        'Film Festival dispatches: Standout indie productions generating awards buzz',
+        'Studio executives negotiate landmark distribution agreements'
+      ],
+      followers: '62K',
+      relevance: 96,
+      articlesPerWeek: '170 articles per week'
+    },
+
+    /* ── Deep Tech & Software Engineering Feeds ── */
+    {
+      id: 'pf_infoq_soft',
+      topics: ['software engineering', 'programming', 'architecture', 'cloud', 'devops', 'tech'],
+      title: 'InfoQ — Software Development',
+      domain: 'infoq.com',
+      feedUrl: 'https://feed.infoq.com/',
+      logoText: 'IQ',
+      logoBg: '#0284c7',
+      logoColor: '#ffffff',
+      desc: 'Facilitating the spread of knowledge and innovation in enterprise software development: Microservices, DevOps, Cloud Native, and Architecture.',
+      articles: [
+        'Architecting resilient distributed systems with event-driven design',
+        'Kubernetes platform engineering: Internal developer platforms at scale',
+        'Modern database patterns: Distributed SQL vs document stores',
+        'Security by design: Implementing zero-trust principles in microservices'
+      ],
+      followers: '36K',
+      relevance: 97,
+      articlesPerWeek: '40 articles per week'
+    },
+    {
+      id: 'pf_hackernews_ycombinator',
+      topics: ['tech', 'startups', 'software engineering', 'ai', 'programming'],
+      title: 'Hacker News (Y Combinator)',
+      domain: 'news.ycombinator.com',
+      feedUrl: 'https://news.ycombinator.com/rss',
+      logoText: 'Y',
+      logoBg: '#ff6600',
+      logoColor: '#ffffff',
+      desc: 'A social news website focusing on computer science and entrepreneurship run by the startup fund Y Combinator.',
+      articles: [
+        'Show HN: An open-source lightweight alternative to heavyweight cloud suites',
+        'Ask HN: What is your team\'s tech stack for high-throughput data processing?',
+        'Deep dive into CPU cache coherency protocols and memory latency',
+        'Reflections on 10 years building bootstrapped SaaS businesses'
+      ],
+      followers: '95K',
+      relevance: 99,
+      articlesPerWeek: '320 articles per week'
+    }
+  ];
+
+  /* ── Curated Explore Industries Catalog ── */
+  var INDUSTRIES = [
+    { name: 'Advertising', publisher: 'Adweek / Ad Age', search: 'advertising', logoText: 'AW', logoBg: '#0f172a' },
+    { name: 'Automotive', publisher: 'Autoblog / MotorTrend', search: 'automotive', logoText: 'AB', logoBg: '#dc2626' },
+    { name: 'Biopharma', publisher: 'Fierce Biotech / STAT', search: 'biopharma', logoText: 'FB', logoBg: '#0284c7' },
+    { name: 'Cybersecurity', publisher: 'The Hacker News', search: 'cybersecurity', logoText: 'THN', logoBg: '#1e1b4b' },
+    { name: 'Energy & Climate', publisher: 'CleanTechnica', search: 'clean energy', logoText: 'CT', logoBg: '#16a34a' },
+    { name: 'Financial services', publisher: 'Bloomberg / WSJ', search: 'finance', logoText: 'BBG', logoBg: '#d97706' },
+    { name: 'Food & Agri', publisher: 'AgFunderNews', search: 'food tech', logoText: 'AF', logoBg: '#22c55e' },
+    { name: 'Healthcare', publisher: 'STAT News', search: 'healthcare', logoText: 'STAT', logoBg: '#7c3aed' },
+    { name: 'Industrials', publisher: 'Logistics Viewpoints', search: 'logistics', logoText: 'LOG', logoBg: '#3b82f6' },
+    { name: 'Media & entertainment', publisher: 'Variety / Adweek', search: 'entertainment', logoText: 'VAR', logoBg: '#e11d48' },
+    { name: 'Medical devices', publisher: 'MedTech Dive', search: 'biopharma', logoText: 'MD', logoBg: '#0284c7' },
+    { name: 'Real estate', publisher: 'Inman News', search: 'real estate', logoText: 'IN', logoBg: '#0f172a' },
+    { name: 'Retail & E-commerce', publisher: 'Retail Dive', search: 'retail ecommerce', logoText: 'RD', logoBg: '#7c3aed' },
+    { name: 'Telecom & 5G', publisher: 'Light Reading', search: 'telecom', logoText: 'LR', logoBg: '#ea580c' },
+    { name: 'Travel & hospitality', publisher: 'Skift', search: 'travel', logoText: 'SK', logoBg: '#eab308' },
+    { name: 'Venture Capital', publisher: 'TechCrunch / Hacker News', search: 'venture capital', logoText: 'TC', logoBg: '#059669' }
+  ];
+
+  var SPORTS = [
+    { name: 'Football & Premier League', publisher: 'BBC Sport / SkySports', search: 'football', logoText: '⚽', logoBg: '#1e293b' },
+    { name: 'Cricket & IPL', publisher: 'ESPNCricinfo / Cricbuzz', search: 'cricket', logoText: '🏏', logoBg: '#0284c7' },
+    { name: 'Arsenal FC', publisher: 'Arseblog / Arsenal FC', search: 'arsenal', logoText: 'AFC', logoBg: '#dc2626' },
+    { name: 'Formula 1 & Motorsport', publisher: 'Autosport / PlanetF1', search: 'formula 1', logoText: '🏎️', logoBg: '#e11d48' },
+    { name: 'Basketball & NBA', publisher: 'NBA.com / The Ringer', search: 'nba basketball', logoText: '🏀', logoBg: '#d97706' },
+    { name: 'Tennis & Grand Slams', publisher: 'Tennis.com / ATP Tour', search: 'tennis', logoText: '🎾', logoBg: '#16a34a' },
+    { name: 'Gaming & Esports', publisher: 'IGN / Polygon', search: 'gaming', logoText: '🎮', logoBg: '#7c3aed' },
+    { name: 'Movies & Streaming', publisher: 'Variety / Deadline', search: 'entertainment', logoText: '🎬', logoBg: '#be123c' }
+  ];
+
+  var SKILLS = [
+    { name: 'Artificial Intelligence & LLMs', publisher: 'OpenAI / DeepMind', search: 'artificial intelligence', logoText: '🧠', logoBg: '#0f172a' },
+    { name: 'Software Architecture & Cloud', publisher: 'InfoQ / Martin Fowler', search: 'software engineering', logoText: '💻', logoBg: '#0284c7' },
+    { name: 'Product Design & UX', publisher: 'Smashing Mag / Nielsen Norman', search: 'product design', logoText: '🎨', logoBg: '#ea580c' },
+    { name: 'Data Science & Python', publisher: 'Towards Data Science', search: 'data science', logoText: '📊', logoBg: '#059669' }
+  ];
+
+  /* ── Dynamic Knowledge Graph: Associated Topics & Hashtags ──── */
+  var TOPIC_GRAPH = {
+    'cricket': ['cricket', 'sports', 'ipl', 'cricinfo', 'bcci', 'icc', 't20', 'ashes', 'virat kohli', 'rohit sharma'],
+    'cricket365': ['cricket', 'sports', 'ipl', 'cricinfo', 'bcci', 'ashes', 'test cricket'],
+    'football': ['sports', 'soccer', 'arsenal', 'liverpool', 'premier league', 'manchester united', 'champions league', 'chelsea', 'nba', 'tennis'],
+    'arsenal': ['sports', 'chelsea', 'soccer', 'manchester united', 'liverpool', 'premier league', 'football', 'manchester city'],
+    'liverpool': ['football', 'soccer', 'premier league', 'arsenal', 'manchester city', 'champions league', 'sports'],
+    'tech': ['ai', 'cybersecurity', 'software', 'apple', 'google', 'startups', 'venture capital', 'machine learning', 'cloud'],
+    'technology': ['ai', 'cybersecurity', 'software', 'apple', 'google', 'startups', 'venture capital', 'machine learning'],
+    'cybersecurity': ['infosec', 'malware', 'hacker news', 'privacy', 'zero day', 'cloud security', 'tech', 'ransomware'],
+    'marketing': ['growth', 'branding', 'advertising', 'social media', 'seo', 'content marketing', 'business', 'ecommerce'],
+    'business': ['stocks', 'crypto', 'wall street', 'economics', 'investing', 'real estate', 'venture capital', 'startups'],
+    'advertising': ['marketing', 'adweek', 'ad age', 'branding', 'media', 'creative', 'digital ads', 'public relations'],
+    'automotive': ['ev', 'tesla', 'motorsport', 'formula 1', 'electric vehicles', 'supercars', 'mobility', 'autoblog', 'motortrend'],
+    'clean energy': ['solar', 'wind power', 'sustainability', 'cleantech', 'climate', 'energy storage', 'batteries'],
+    'biopharma': ['biotech', 'pharma', 'medicine', 'clinical trials', 'science', 'healthcare', 'genomics', 'stat news'],
+    'healthcare': ['biopharma', 'medicine', 'health', 'stat news', 'clinical trials', 'biotech', 'public health'],
+    'real estate': ['housing', 'mortgage', 'proptech', 'commercial real estate', 'investing', 'markets'],
+    'retail ecommerce': ['retail', 'ecommerce', 'dtc', 'supply chain', 'omnichannel', 'brands'],
+    'gaming': ['video games', 'ign', 'esports', 'playstation', 'xbox', 'nintendo', 'steam'],
+    'entertainment': ['movies', 'streaming', 'variety', 'hollywood', 'television', 'box office'],
+    'formula 1': ['motorsport', 'ferrari', 'red bull racing', 'mercedes f1', 'racing', 'lewis hamilton', 'max verstappen'],
+    'nba basketball': ['nba', 'basketball', 'lakers', 'warriors', 'sports', 'espn', 'playoffs'],
+    'tennis': ['wimbledon', 'atp', 'wta', 'us open', 'sports', 'djokovic', 'alcaraz'],
+    'artificial intelligence': ['openai', 'chatgpt', 'llm', 'machine learning', 'deep learning', 'robotics', 'claude', 'frontier ai'],
+    'software engineering': ['programming', 'javascript', 'python', 'cloud', 'devops', 'architecture', 'github', 'infoq'],
+    'venture capital': ['startups', 'y combinator', 'seed funding', 'tech startups', 'founders', 'investing', 'techcrunch']
+  };
+
+  /* ── Followed Feeds Local Cache ─────────────────────────────── */
+  var followedFeedUrls = new Set();
+  var selectedDropdownIndex = -1;
+  var currentDropdownItems = [];
+
+  function syncFollowedFeeds() {
+    var api = w.BLINK_WATCHLISTS || w.WatchlistsAPI;
+    if (api && typeof (api.load || api.loadFeeds) === 'function') {
+      var fn = api.load ? api.load : api.loadFeeds;
+      fn.call(api).then(function (feeds) {
+        followedFeedUrls.clear();
+        (feeds || []).forEach(function (f) {
+          if (f.feedUrl) followedFeedUrls.add(f.feedUrl);
+          if (f.url) followedFeedUrls.add(f.url);
+          if (f.id) followedFeedUrls.add(f.id);
+        });
+        updateFollowButtonStates();
+      }).catch(function(){});
+    }
+  }
+
+  function updateFollowButtonStates() {
+    document.querySelectorAll('.bs-follow-btn').forEach(function (btn) {
+      var url = btn.getAttribute('data-feed-url');
+      var id = btn.getAttribute('data-feed-id');
+      if (followedFeedUrls.has(url) || followedFeedUrls.has(id)) {
+        btn.classList.add('following');
+        btn.innerHTML = '<span>✓ Following</span>';
+        btn.setAttribute('title', 'Click to unfollow');
+      } else {
+        btn.classList.remove('following');
+        btn.innerHTML = '<span>+ Follow</span>';
+        btn.setAttribute('title', 'Follow feed');
+      }
+    });
+  }
+
+  function showToast(msg) {
+    var toast = $('bs-toast');
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.style.display = 'flex';
+    setTimeout(function () { toast.style.display = 'none'; }, 2600);
+  }
+
+  /* ── Intelligent Entity & Topic Classifier ──────────────────── */
+  function classifyQuery(query) {
+    var q = query.toLowerCase();
+
+    var politicalKeywords = [
+      'trump', 'donald', 'donald trump', 'biden', 'joe biden', 'obama', 'kamala', 'harris', 'desantis',
+      'putin', 'zelensky', 'modi', 'sunak', 'starmer', 'netanyahu', 'macron',
+      'politics', 'congress', 'white house', 'senate', 'republican', 'democrat', 'gop', 'democrats',
+      'election', 'elections', 'vote', 'voting', 'supreme court', 'policy', 'nato', 'un', 'diplomacy',
+      'sanctions', 'border', 'tariff', 'tariffs', 'immigration', 'capitol', 'pentagon', 'government'
+    ];
+
+    var businessKeywords = [
+      'stock', 'stocks', 'market', 'markets', 'investing', 'crypto', 'bitcoin', 'btc', 'ethereum',
+      'fed', 'federal reserve', 'economy', 'inflation', 'recession', 'real estate', 'housing',
+      'banking', 'fintech', 'wall street', 'nasdaq', 's&p', 'gold', 'oil', 'commodities', 'trading'
+    ];
+
+    var techKeywords = [
+      'ai', 'artificial intelligence', 'openai', 'chatgpt', 'anthropic', 'claude', 'deepmind',
+      'apple', 'google', 'microsoft', 'meta', 'nvidia', 'tesla', 'musk', 'elon', 'elon musk',
+      'software', 'semiconductor', 'semiconductors', 'chips', 'hardware', 'saas', 'cloud', 'coding',
+      'programming', 'startup', 'startups', 'robotics', 'spacex', 'crypto', 'blockchain'
+    ];
+
+    var sportsKeywords = [
+      'football', 'soccer', 'arsenal', 'chelsea', 'liverpool', 'manchester united', 'manchester city',
+      'cricket', 'ipl', 'bcci', 'icc', 'ashes', 'tennis', 'wimbledon', 'formula 1', 'f1',
+      'nba', 'basketball', 'lakers', 'warriors', 'golf', 'rugby', 'nfl', 'sports', 'athletes'
+    ];
+
+    if (politicalKeywords.some(function(k) { return q.indexOf(k) !== -1; })) return 'politics';
+    if (techKeywords.some(function(k) { return q.indexOf(k) !== -1; })) return 'tech';
+    if (businessKeywords.some(function(k) { return q.indexOf(k) !== -1; })) return 'business';
+    if (sportsKeywords.some(function(k) { return q.indexOf(k) !== -1; })) return 'sports';
+    return 'general';
+  }
+
+  /* ── Current Feeds State Cache for Drawer ── */
+  var currentRenderedFeeds = [];
+
+  /* ── Live Search Execution Engine ───────────────────────────── */
+  function executeSearch(rawQuery) {
+    closeDropdown();
+    var query = String(rawQuery || '').trim().replace(/^#/, '');
+    var input = $('bs-query-input');
+    var clearBtn = $('bs-clear-btn');
+    var exploreView = $('bs-explore-view');
+    var resultsView = $('bs-results-view');
+    var countEl = $('bs-results-count');
+    var feedList = $('bs-feed-list');
+
+    if (input) input.value = rawQuery || '';
+    if (clearBtn) clearBtn.classList.toggle('visible', !!query);
+
+    if (!query) {
+      exploreView.style.display = 'block';
+      resultsView.style.display = 'none';
+      return;
+    }
+
+    exploreView.style.display = 'none';
+    resultsView.style.display = 'block';
+
+    if (countEl) countEl.textContent = 'Searching top news & RSS sources...';
+    if (feedList) feedList.innerHTML = '<div style="padding:40px 0;text-align:center;color:var(--bs-muted);font-weight:600;"><div style="font-size:18px;margin-bottom:6px;">🔍 Finding real-time sources for "' + escapeHtml(query) + '"...</div><div>Querying newsrooms, publications and RSS feeds...</div></div>';
+
+    renderRelatedTopics(query);
+
+    // Call live feed search API
+    fetch('/api/search-feeds?q=' + encodeURIComponent(query))
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        var liveFeeds = (data && data.feeds && data.feeds.length) ? data.feeds : [];
+
+        // Also check local curated MASTER_FEEDS for direct matches
+        var localMatches = [];
+        var qLower = query.toLowerCase();
+        MASTER_FEEDS.forEach(function (f) {
+          var titleLower = f.title.toLowerCase();
+          var domainLower = f.domain.toLowerCase();
+          if (titleLower.indexOf(qLower) !== -1 || domainLower.indexOf(qLower) !== -1 || (f.topics && f.topics.some(function(t){ return t.toLowerCase().indexOf(qLower) !== -1; }))) {
+            localMatches.push(f);
+          }
+        });
+
+        // Combine feeds giving 100% PRIORITY to live real-time search feeds
+        var combined = [];
+
+        // 1. Add all live real-time feeds first
+        liveFeeds.forEach(function(lf) {
+          combined.push(lf);
+        });
+
+        // 2. Append any matching curated publications that were not in live news
+        localMatches.forEach(function(lf) {
+          if (!combined.some(function(ex) { return ex.domain === lf.domain || ex.title.toLowerCase() === lf.title.toLowerCase(); })) {
+            combined.push(lf);
+          }
+        });
+
+        if (combined.length === 0) {
+          combined = liveFeeds.length ? liveFeeds : localMatches;
+        }
+
+        currentRenderedFeeds = combined;
+        renderFeedResults(combined, query);
+      })
+      .catch(function (err) {
+        console.error('Fetch error:', err);
+        // Fallback to local search
+        var localMatches = [];
+        var qLower = query.toLowerCase();
+        MASTER_FEEDS.forEach(function (f) {
+          var titleLower = f.title.toLowerCase();
+          if (titleLower.indexOf(qLower) !== -1 || (f.topics && f.topics.some(function(t){ return t.toLowerCase().indexOf(qLower) !== -1; }))) {
+            localMatches.push(f);
+          }
+        });
+        currentRenderedFeeds = localMatches;
+        renderFeedResults(localMatches, query);
+      });
+  }
+
+  /* ── Article Thumbnail Resolver ────────────────────────────── */
+  function getArticleThumbnail(artTitle, feedTitle, index) {
+    var text = (String(artTitle || '') + ' ' + String(feedTitle || '')).toLowerCase();
+
+    var sportsImages = [
+      'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=240&q=80',
+      'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=240&q=80',
+      'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=240&q=80',
+      'https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=240&q=80',
+      'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=240&q=80'
+    ];
+
+    var politicsImages = [
+      'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=240&q=80',
+      'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=240&q=80',
+      'https://images.unsplash.com/photo-1575517111478-7f6afd0973db?auto=format&fit=crop&w=240&q=80',
+      'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=240&q=80'
+    ];
+
+    var techImages = [
+      'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=240&q=80',
+      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=240&q=80',
+      'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=240&q=80',
+      'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=240&q=80'
+    ];
+
+    var businessImages = [
+      'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=240&q=80',
+      'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=240&q=80',
+      'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=240&q=80'
+    ];
+
+    var autoImages = [
+      'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=240&q=80',
+      'https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=240&q=80',
+      'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=240&q=80'
+    ];
+
+    var newsGeneral = [
+      'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=240&q=80',
+      'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=240&q=80',
+      'https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=240&q=80'
+    ];
+
+    var pool = newsGeneral;
+
+    if (/football|soccer|cricket|nba|tennis|nfl|coach|investigation|gm|player|team|quarterback|sports|match|stadium/i.test(text)) {
+      pool = sportsImages;
+    } else if (/trump|president|biden|congress|senate|court|white house|policy|election|republican|democrat|government/i.test(text)) {
+      pool = politicsImages;
+    } else if (/ai|software|tech|apple|google|chip|cloud|robot|chatgpt|nvidia|cyber/i.test(text)) {
+      pool = techImages;
+    } else if (/stock|market|fund|economy|inflation|invest|crypto|bitcoin|bank|real estate/i.test(text)) {
+      pool = businessImages;
+    } else if (/car|auto|ev|electric vehicle|tesla|engine|motor/i.test(text)) {
+      pool = autoImages;
+    }
+
+    var idx = (typeof index === 'number' ? index : Math.floor(Math.random() * pool.length)) % pool.length;
+    return pool[idx];
+  }
+
+  /* ── Open Side Drawer Preview on Feed Click ─────────────────── */
+  function openFeedDrawer(feed) {
+    if (!feed) return;
+    var backdrop = $('bs-drawer-backdrop');
+    var drawer = $('bs-drawer');
+    var logoEl = $('bs-drawer-logo');
+    var titleEl = $('bs-drawer-title');
+    var domainEl = $('bs-drawer-domain');
+    var listEl = $('bs-drawer-articles-list');
+    var countEl = $('bs-drawer-articles-count');
+    var actionWrap = $('bs-drawer-action-wrap');
+
+    if (!drawer) return;
+
+    if (logoEl) {
+      logoEl.style.background = feed.logoBg || '#0f172a';
+      logoEl.style.color = feed.logoColor || '#ffffff';
+      if (feed.visualUrl && feed.visualUrl.startsWith('http')) {
+        logoEl.innerHTML = '<img src="' + escapeAttr(feed.visualUrl) + '" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null;this.parentNode.textContent=\'' + escapeHtml(feed.title.slice(0,3).toUpperCase()) + '\';" />';
+      } else {
+        var faviconSrc = 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(feed.domain || 'news.google.com') + '&sz=64';
+        logoEl.innerHTML = '<img src="' + faviconSrc + '" alt="" style="width:28px;height:28px;border-radius:6px;object-fit:contain;" onerror="this.onerror=null;this.parentNode.textContent=\'' + escapeHtml(feed.title.slice(0,3).toUpperCase()) + '\';" />';
+      }
+    }
+    if (titleEl) titleEl.textContent = feed.title;
+    if (domainEl) {
+      domainEl.textContent = feed.domain;
+      domainEl.href = (feed.domain.indexOf('http') === 0 ? feed.domain : 'https://' + feed.domain);
+    }
+
+    var isFollowing = followedFeedUrls.has(feed.feedUrl) || followedFeedUrls.has(feed.id);
+    if (actionWrap) {
+      actionWrap.innerHTML = '<button type="button" class="bs-follow-btn' + (isFollowing ? ' following' : '') + '" data-feed-id="' + feed.id + '" data-feed-title="' + escapeAttr(feed.title) + '" data-feed-url="' + escapeAttr(feed.feedUrl) + '">'
+        + '<span>' + (isFollowing ? '✓ Following' : '+ Follow') + '</span>'
+        + '</button>';
+
+      var drawerFollowBtn = actionWrap.querySelector('.bs-follow-btn');
+      if (drawerFollowBtn) {
+        drawerFollowBtn.onclick = function(e) {
+          e.preventDefault();
+          toggleFollow(feed, drawerFollowBtn);
+          // Sync any corresponding button in main list
+          updateFollowButtonStates();
+        };
+      }
+    }
+
+    var articles = feed.fullArticles || [];
+    if (!articles.length && feed.articles) {
+      articles = feed.articles.map(function(t) { return { title: t, link: feed.domain ? 'https://' + feed.domain : '#', pubDate: 'Recent', source: feed.title }; });
+    }
+
+    if (countEl) countEl.textContent = 'Latest Coverage (' + articles.length + ' stories)';
+
+    var artHtml = '';
+    if (articles.length === 0) {
+      artHtml = '<div style="padding:24px 0;color:var(--bs-muted);text-align:center;">No recent stories found for this feed.</div>';
+    } else {
+      articles.forEach(function(art, artIdx) {
+        var thumbUrl = art.thumbnail || getArticleThumbnail(art.title, feed.title, artIdx);
+        var sourceDomain = feed.domain || 'news.google.com';
+        var faviconUrl = 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(sourceDomain) + '&sz=32';
+
+        artHtml += '<div class="bs-drawer-article">'
+          + '<div class="bs-drawer-art-thumb">'
+          + '<img src="' + escapeAttr(thumbUrl) + '" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=200&q=80\';" />'
+          + '</div>'
+          + '<div class="bs-drawer-art-content">'
+          + '<a href="' + (art.link || '#') + '" target="_blank" rel="noopener noreferrer" class="bs-drawer-art-title">' + escapeHtml(art.title) + '</a>'
+          + '<div class="bs-drawer-art-meta">'
+          + '<img src="' + faviconUrl + '" alt="" style="width:14px;height:14px;border-radius:3px;vertical-align:middle;" onerror="this.style.display=\'none\';" />'
+          + '<span>' + escapeHtml(art.source || feed.domain) + '</span>'
+          + '<span>•</span>'
+          + '<span>' + (art.pubDate ? new Date(art.pubDate).toLocaleDateString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : 'Recent') + '</span>'
+          + '</div>'
+          + '</div>'
+          + '</div>';
+      });
+    }
+
+    if (listEl) listEl.innerHTML = artHtml;
+
+    if (backdrop) backdrop.classList.add('open');
+    drawer.classList.add('open');
+  }
+
+  function closeFeedDrawer() {
+    var backdrop = $('bs-drawer-backdrop');
+    var drawer = $('bs-drawer');
+    if (backdrop) backdrop.classList.remove('open');
+    if (drawer) drawer.classList.remove('open');
+  }
+
+  function toggleFollow(feed, btn) {
+    var fid = feed.id;
+    var ftitle = feed.title || feed.name;
+    var furl = feed.feedUrl || feed.url;
+    var isAlreadyFollowing = followedFeedUrls.has(furl) || followedFeedUrls.has(fid);
+
+    if (isAlreadyFollowing) {
+      if (w.FollowFolderModal && typeof w.FollowFolderModal.unfollow === 'function') {
+        w.FollowFolderModal.unfollow(fid, ftitle, {
+          onUnfollow: function () {
+            followedFeedUrls.delete(furl);
+            followedFeedUrls.delete(fid);
+            updateFollowButtonStates();
+          }
+        });
+      } else {
+        var api = w.BLINK_WATCHLISTS || w.WatchlistsAPI;
+        if (api && typeof (api.remove || api.removeFeed) === 'function') {
+          var rm = api.remove || api.removeFeed;
+          rm.call(api, fid);
+        }
+        followedFeedUrls.delete(furl);
+        followedFeedUrls.delete(fid);
+        updateFollowButtonStates();
+        showToast('Removed ' + ftitle + ' from watchlists');
+      }
+    } else {
+      if (w.FollowFolderModal && typeof w.FollowFolderModal.open === 'function') {
+        w.FollowFolderModal.open({
+          id: fid,
+          title: ftitle,
+          feedUrl: furl,
+          siteUrl: feed.siteUrl || feed.domain || furl,
+          icon: feed.icon || '',
+          category: feed.category || ''
+        }, {
+          onFollow: function (savedFeed, chosenFolder) {
+            followedFeedUrls.add(furl);
+            followedFeedUrls.add(fid);
+            if (savedFeed && savedFeed.id) followedFeedUrls.add(savedFeed.id);
+            updateFollowButtonStates();
+          }
+        });
+      } else {
+        var feedObj = {
+          id: fid,
+          name: ftitle,
+          title: ftitle,
+          feedUrl: furl,
+          type: 'feed',
+          folderId: 'pff_tech'
+        };
+        var api = w.BLINK_WATCHLISTS || w.WatchlistsAPI;
+        if (api && typeof (api.add || api.saveFeed) === 'function') {
+          var addFn = api.add || api.saveFeed;
+          addFn.call(api, feedObj);
+        }
+        followedFeedUrls.add(furl);
+        followedFeedUrls.add(fid);
+        updateFollowButtonStates();
+        showToast('✓ Followed ' + ftitle + '!');
+      }
+    }
+  }
+
+  /* ── Render Feed Results Cards ──────────────────────────────── */
+  function renderFeedResults(feeds, query) {
+    var container = $('bs-feed-list');
+    var countEl = $('bs-results-count');
+    if (!container) return;
+
+    if (countEl) countEl.textContent = (feeds.length) + ' publisher feeds discovered';
+
+    if (!feeds.length) {
+      container.innerHTML = '<div style="padding:48px 0;text-align:center;color:var(--bs-muted);font-size:15px;">No publisher feeds found matching "' + escapeHtml(query) + '". Try another keyword or browse topics below.</div>';
+      return;
+    }
+
+    var html = '';
+    feeds.forEach(function (f, idx) {
+      var isFollowing = followedFeedUrls.has(f.feedUrl) || followedFeedUrls.has(f.id);
+
+      var articlesHtml = '';
+      if (f.articles && f.articles.length > 0) {
+        articlesHtml += '<div class="bs-fc-articles">';
+        f.articles.slice(0, 3).forEach(function (art) {
+          var title = typeof art === 'string' ? art : art.title;
+          var link = typeof art === 'object' && art.link ? art.link : ('https://' + (f.domain || 'news.google.com'));
+          articlesHtml += '<a href="' + escapeAttr(link) + '" target="_blank" rel="noopener noreferrer" class="bs-fc-article" onclick="event.stopPropagation();">'
+            + '<span class="bs-fc-article-bullet">›</span>'
+            + '<span class="bs-fc-article-text">' + escapeHtml(title) + '</span>'
+            + '</a>';
+        });
+        articlesHtml += '</div>';
+      }
+
+      var logoContent = escapeHtml(f.logoText || f.title.slice(0, 3).toUpperCase());
+      if (f.visualUrl && f.visualUrl.startsWith('http')) {
+        logoContent = '<img src="' + escapeAttr(f.visualUrl) + '" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null;this.parentNode.innerHTML=\'' + escapeHtml(f.title.slice(0,3).toUpperCase()) + '\';" />';
+      } else {
+        var faviconSrc = 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(f.domain || 'news.google.com') + '&sz=64';
+        logoContent = '<img src="' + faviconSrc + '" alt="" style="width:28px;height:28px;border-radius:6px;object-fit:contain;" onerror="this.onerror=null;this.parentNode.innerHTML=\'' + escapeHtml(f.title.slice(0,3).toUpperCase()) + '\';" />';
+      }
+
+      html += '<div class="bs-feed-card" data-feed-idx="' + idx + '" data-feed-id="' + f.id + '" style="cursor:pointer;">'
+        + '<div class="bs-fc-header">'
+        + '<div class="bs-fc-logo" style="background:' + (f.logoBg || '#0f172a') + ';color:' + (f.logoColor || '#ffffff') + ';">'
+        + logoContent
+        + '</div>'
+        + '<div class="bs-fc-title-group">'
+        + '<div class="bs-fc-title">' + escapeHtml(f.title) + '</div>'
+        + '<div class="bs-fc-subinfo">'
+        + '<a href="https://' + f.domain + '" target="_blank" rel="noopener noreferrer" class="bs-fc-domain" onclick="event.stopPropagation();">' + escapeHtml(f.domain) + '</a>'
+        + '</div>'
+        + '</div>'
+        + '<div class="bs-fc-actions" onclick="event.stopPropagation();">'
+        + '<button type="button" class="bs-similar-btn" data-similar="' + encodeURIComponent(query) + '">Similar feeds</button>'
+        + '<button type="button" class="bs-follow-btn' + (isFollowing ? ' following' : '') + '" data-feed-id="' + f.id + '" data-feed-title="' + escapeAttr(f.title) + '" data-feed-url="' + escapeAttr(f.feedUrl) + '">'
+        + '<span>' + (isFollowing ? '✓ Following' : '+ Follow') + '</span>'
+        + '</button>'
+        + '</div>'
+        + '</div>'
+        + '<p class="bs-fc-desc">' + escapeHtml(f.desc) + '</p>'
+        + articlesHtml
+        + '<div class="bs-fc-metrics">'
+        + '<span>' + (f.followers || '10K') + ' followers</span>'
+        + '<span>'
+        + '<span class="bs-relevance-bar"><span class="bs-relevance-fill" style="width:' + (f.relevance || 80) + '%;"></span></span>'
+        + ' relevance'
+        + '</span>'
+        + '<span>' + (f.articlesPerWeek || '25 articles per week') + '</span>'
+        + '</div>'
+        + '</div>';
+    });
+
+    container.innerHTML = html;
+
+    // Attach Card Click to Open Drawer Popup
+    container.querySelectorAll('.bs-feed-card').forEach(function (card) {
+      card.onclick = function (e) {
+        var idx = parseInt(card.getAttribute('data-feed-idx'), 10);
+        if (!isNaN(idx) && currentRenderedFeeds[idx]) {
+          openFeedDrawer(currentRenderedFeeds[idx]);
+        }
+      };
+    });
+
+    // Attach Follow Button Listeners
+    container.querySelectorAll('.bs-follow-btn').forEach(function (btn) {
+      btn.onclick = function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var fid = btn.getAttribute('data-feed-id');
+        var matchingFeed = currentRenderedFeeds.find(function(item){ return item.id === fid; });
+        if (matchingFeed) {
+          toggleFollow(matchingFeed, btn);
+        }
+      };
+    });
+
+    // Attach Similar Feeds Button Listeners
+    container.querySelectorAll('.bs-similar-btn').forEach(function (btn) {
+      btn.onclick = function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var term = decodeURIComponent(btn.getAttribute('data-similar') || query);
+        executeSearch(term);
+      };
+    });
+  }
+
+  /* ── Context-Aware Related Topics Hashtags ──────────────────── */
+  function renderRelatedTopics(query) {
+    var container = $('bs-related-tags');
+    if (!container) return;
+
+    var tags = [];
+    var qClean = query.toLowerCase().replace(/^#/, '').trim();
+    var words = qClean.split(/\s+/).filter(Boolean);
+    var category = classifyQuery(qClean);
+
+    // Primary tags based on exact query words
+    if (words.length > 1) {
+      words.forEach(function(w) { if (w.length > 2 && tags.indexOf(w) === -1) tags.push(w); });
+    }
+    if (tags.indexOf(qClean) === -1) tags.unshift(qClean);
+
+    if (TOPIC_GRAPH[qClean]) {
+      TOPIC_GRAPH[qClean].forEach(function(t) { if (tags.indexOf(t) === -1) tags.push(t); });
+    } else if (category === 'politics') {
+      ['politics', 'white house', 'congress', 'republicans', 'democrats', 'elections 2026', 'senate', 'supreme court', 'world news'].forEach(function(t) {
+        if (tags.indexOf(t) === -1) tags.push(t);
+      });
+    } else if (category === 'tech') {
+      ['tech', 'ai', 'startups', 'software', 'silicon valley', 'venture capital', 'machine learning'].forEach(function(t) {
+        if (tags.indexOf(t) === -1) tags.push(t);
+      });
+    } else if (category === 'business') {
+      ['business', 'stocks', 'economy', 'crypto', 'investing', 'wall street', 'finance'].forEach(function(t) {
+        if (tags.indexOf(t) === -1) tags.push(t);
+      });
+    } else if (category === 'sports') {
+      ['sports', 'premier league', 'cricket', 'nba', 'formula 1', 'football', 'tennis'].forEach(function(t) {
+        if (tags.indexOf(t) === -1) tags.push(t);
+      });
+    } else {
+      ['news', 'breaking news', 'world news', 'investigations', 'updates'].forEach(function(t) {
+        if (tags.indexOf(t) === -1) tags.push(t);
+      });
+    }
+
+    var html = '';
+    tags.slice(0, 10).forEach(function (t) {
+      html += '<button type="button" class="bs-tag-pill" data-tag="' + escapeAttr(t) + '">'
+        + '<span class="hash">#</span> '
+        + '<span>' + escapeHtml(t) + '</span>'
+        + '</button>';
+    });
+
+    container.innerHTML = html;
+
+    // Click on Hashtag Pill -> Replaces Search Key and Dynamically Explores
+    container.querySelectorAll('.bs-tag-pill').forEach(function (pill) {
+      pill.onclick = function () {
+        var targetTag = pill.getAttribute('data-tag');
+        executeSearch('#' + targetTag);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+    });
+  }
+
+  /* ── Floating Context Autocomplete Dropdown Controller ──────── */
+  function updateDropdown(val) {
+    var dropdown = $('bs-autocomplete-dropdown');
+    if (!dropdown) return;
+
+    var query = String(val || '').trim().replace(/^#/, '').toLowerCase();
+    if (!query || query.length < 1) {
+      closeDropdown();
+      return;
+    }
+
+    // 1. Gather Topic Suggestions
+    var topicSuggestions = [];
+    topicSuggestions.push(query);
+
+    Object.keys(TOPIC_GRAPH).forEach(function(k) {
+      if (k.indexOf(query) !== -1 && topicSuggestions.indexOf(k) === -1) {
+        topicSuggestions.push(k);
+      }
+    });
+
+    // 2. Gather Matching Feeds
+    var feedSuggestions = [];
+    MASTER_FEEDS.forEach(function (f) {
+      var tLower = f.title.toLowerCase();
+      var dLower = f.domain.toLowerCase();
+      if (tLower.indexOf(query) !== -1 || dLower.indexOf(query) !== -1 || (f.topics && f.topics.some(function(tp){ return tp.indexOf(query) !== -1; }))) {
+        feedSuggestions.push(f);
+      }
+    });
+
+    currentDropdownItems = [];
+    selectedDropdownIndex = -1;
+
+    var html = '';
+
+    // Section 1: TOPICS
+    if (topicSuggestions.length > 0) {
+      html += '<div class="bs-dd-section-title">Topics</div>';
+      topicSuggestions.slice(0, 3).forEach(function(t) {
+        var idx = currentDropdownItems.length;
+        currentDropdownItems.push({ type: 'topic', value: '#' + t });
+        html += '<div class="bs-dd-item" data-item-idx="' + idx + '" data-search-val="#' + escapeAttr(t) + '">'
+          + '<span class="bs-dd-topic-pill"><span style="opacity:0.6;">#</span> ' + escapeHtml(t) + '</span>'
+          + '</div>';
+      });
+    }
+
+    // Section 2: FEEDS
+    if (feedSuggestions.length > 0) {
+      html += '<div class="bs-dd-section-title" style="margin-top:4px;">Feeds</div>';
+      feedSuggestions.slice(0, 8).forEach(function(f) {
+        var idx = currentDropdownItems.length;
+        currentDropdownItems.push({ type: 'feed', value: f.title });
+        html += '<div class="bs-dd-item" data-item-idx="' + idx + '" data-search-val="' + escapeAttr(f.title) + '">'
+          + '<div class="bs-dd-icon" style="background:' + (f.logoBg || '#0f172a') + ';color:' + (f.logoColor || '#ffffff') + ';">'
+          + escapeHtml(f.logoText || f.title.slice(0, 3).toUpperCase())
+          + '</div>'
+          + '<div class="bs-dd-text-group">'
+          + '<span class="bs-dd-main-text">' + escapeHtml(f.title) + '</span>'
+          + '<span class="bs-dd-sub-text">' + escapeHtml(f.domain) + '</span>'
+          + '</div>'
+          + '</div>';
+      });
+    }
+
+    if (currentDropdownItems.length === 0) {
+      closeDropdown();
+      return;
+    }
+
+    dropdown.innerHTML = html;
+    dropdown.classList.add('open');
+
+    // Bind item clicks
+    dropdown.querySelectorAll('.bs-dd-item').forEach(function(item) {
+      item.onmousedown = function(e) {
+        e.preventDefault();
+        var sVal = item.getAttribute('data-search-val');
+        executeSearch(sVal);
+      };
+    });
+  }
+
+  function highlightDropdownItem(index) {
+    var dropdown = $('bs-autocomplete-dropdown');
+    if (!dropdown) return;
+    var items = dropdown.querySelectorAll('.bs-dd-item');
+    items.forEach(function(el, i) {
+      el.classList.toggle('selected', i === index);
+      if (i === index) el.scrollIntoView({ block: 'nearest' });
+    });
+  }
+
+  function closeDropdown() {
+    var dropdown = $('bs-autocomplete-dropdown');
+    if (dropdown) {
+      dropdown.classList.remove('open');
+      dropdown.innerHTML = '';
+    }
+    selectedDropdownIndex = -1;
+    currentDropdownItems = [];
+  }
+
+  /* ── Render Explore Mode Catalog ── */
+  function renderExploreCatalog() {
+    var indWrap = $('bs-industries-container');
+    if (indWrap) {
+      var indHtml = '';
+      INDUSTRIES.forEach(function (item) {
+        indHtml += '<div class="bs-ind-card" data-search="' + escapeAttr(item.search) + '">'
+          + '<div class="bs-ind-name">' + escapeHtml(item.name) + '</div>'
+          + '<div class="bs-ind-feature">'
+          + '<div class="bs-ind-logo" style="background:' + item.logoBg + ';">' + escapeHtml(item.logoText) + '</div>'
+          + '<div class="bs-ind-meta">'
+          + '<span class="bs-ind-feat-label">Featuring</span>'
+          + '<span class="bs-ind-publisher">' + escapeHtml(item.publisher) + '</span>'
+          + '</div>'
+          + '</div>'
+          + '</div>';
+      });
+      indWrap.innerHTML = indHtml;
+    }
+
+    var sportsWrap = $('bs-sports-container');
+    if (sportsWrap) {
+      var spHtml = '';
+      SPORTS.forEach(function (item) {
+        spHtml += '<div class="bs-ind-card" data-search="' + escapeAttr(item.search) + '">'
+          + '<div class="bs-ind-name">' + escapeHtml(item.name) + '</div>'
+          + '<div class="bs-ind-feature">'
+          + '<div class="bs-ind-logo" style="background:' + item.logoBg + ';">' + escapeHtml(item.logoText) + '</div>'
+          + '<div class="bs-ind-meta">'
+          + '<span class="bs-ind-feat-label">Featuring</span>'
+          + '<span class="bs-ind-publisher">' + escapeHtml(item.publisher) + '</span>'
+          + '</div>'
+          + '</div>'
+          + '</div>';
+      });
+      sportsWrap.innerHTML = spHtml;
+    }
+
+    var skillsWrap = $('bs-skills-container');
+    if (skillsWrap) {
+      var skHtml = '';
+      SKILLS.forEach(function (item) {
+        skHtml += '<div class="bs-ind-card" data-search="' + escapeAttr(item.search) + '">'
+          + '<div class="bs-ind-name">' + escapeHtml(item.name) + '</div>'
+          + '<div class="bs-ind-feature">'
+          + '<div class="bs-ind-logo" style="background:' + item.logoBg + ';">' + escapeHtml(item.logoText) + '</div>'
+          + '<div class="bs-ind-meta">'
+          + '<span class="bs-ind-feat-label">Featuring</span>'
+          + '<span class="bs-ind-publisher">' + escapeHtml(item.publisher) + '</span>'
+          + '</div>'
+          + '</div>'
+          + '</div>';
+      });
+      skillsWrap.innerHTML = skHtml;
+    }
+
+    // Bind click events on all Explore tiles and Hero cards
+    document.querySelectorAll('[data-search]').forEach(function (card) {
+      card.onclick = function (e) {
+        e.preventDefault();
+        var searchKey = card.getAttribute('data-search');
+        executeSearch('#' + searchKey);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+    });
+  }
+
+  /* ── Utilities ──────────────────────────────────────────────── */
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function escapeAttr(str) {
+    if (!str) return '';
+    return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  /* ── Boot Controller ────────────────────────────────────────── */
+  function boot() {
+    renderExploreCatalog();
+    syncFollowedFeeds();
+
+    var input = $('bs-query-input');
+    var clearBtn = $('bs-clear-btn');
+    var tabs = document.querySelectorAll('.bs-tab');
+    var sortSelect = $('bs-sort-select');
+
+    if (input) {
+      // Keystrokes -> update dropdown autocomplete
+      input.addEventListener('input', function () {
+        var val = input.value;
+        if (clearBtn) clearBtn.classList.toggle('visible', !!val);
+        updateDropdown(val);
+      });
+
+      // Keyboard navigation in autocomplete
+      input.addEventListener('keydown', function (e) {
+        var dropdown = $('bs-autocomplete-dropdown');
+        var isOpen = dropdown && dropdown.classList.contains('open');
+
+        if (e.key === 'ArrowDown') {
+          if (isOpen && currentDropdownItems.length > 0) {
+            e.preventDefault();
+            selectedDropdownIndex = (selectedDropdownIndex + 1) % currentDropdownItems.length;
+            highlightDropdownItem(selectedDropdownIndex);
+          }
+        } else if (e.key === 'ArrowUp') {
+          if (isOpen && currentDropdownItems.length > 0) {
+            e.preventDefault();
+            selectedDropdownIndex = (selectedDropdownIndex - 1 + currentDropdownItems.length) % currentDropdownItems.length;
+            highlightDropdownItem(selectedDropdownIndex);
+          }
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          if (isOpen && selectedDropdownIndex >= 0 && currentDropdownItems[selectedDropdownIndex]) {
+            executeSearch(currentDropdownItems[selectedDropdownIndex].value);
+          } else {
+            executeSearch(input.value);
+          }
+        } else if (e.key === 'Escape') {
+          closeDropdown();
+        }
+      });
+
+      input.addEventListener('focus', function () {
+        if (input.value.trim()) updateDropdown(input.value);
+      });
+
+      input.addEventListener('blur', function () {
+        // Small delay to allow mousedown on dropdown items to fire
+        setTimeout(closeDropdown, 200);
+      });
+    }
+
+    if (clearBtn) {
+      clearBtn.onclick = function () {
+        if (input) input.value = '';
+        closeDropdown();
+        executeSearch('');
+        if (input) input.focus();
+      };
+    }
+
+    // Sort select change
+    if (sortSelect) {
+      sortSelect.addEventListener('change', function () {
+        if (input && input.value.trim()) {
+          executeSearch(input.value.trim());
+        }
+      });
+    }
+
+    // Top Tabs switcher
+    tabs.forEach(function (tab) {
+      tab.onclick = function () {
+        tabs.forEach(function (t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        var tabKey = tab.getAttribute('data-tab');
+        if (tabKey === 'reddit') executeSearch('#reddit');
+        else if (tabKey === 'newsletters') executeSearch('#newsletters');
+        else if (tabKey === 'google-news') executeSearch('#news');
+        else executeSearch('');
+      };
+    });
+
+    // Close drawer handlers
+    var drawerCloseBtn = $('bs-drawer-close-btn');
+    var drawerBackdrop = $('bs-drawer-backdrop');
+    if (drawerCloseBtn) drawerCloseBtn.onclick = closeFeedDrawer;
+    if (drawerBackdrop) drawerBackdrop.onclick = closeFeedDrawer;
+
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeFeedDrawer();
+    });
+
+    if (q) {
+      executeSearch(q);
+    }
+
+    document.addEventListener('watchlists-changed', syncFollowedFeeds);
+    document.addEventListener('rss-feeds-updated', syncFollowedFeeds);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+
+})(window);
+</script>
+
+</body>
+</html>
