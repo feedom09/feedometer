@@ -1,0 +1,10 @@
+[
+  "schema_phase2.sql",
+  "schema_phase2_search.sql",
+  "schema_phase5_automation.sql",
+  "migration_phase6_integrations.sql",
+  "migration_phase7_developer_api.sql",
+  "schema_phase8_builder.sql",
+  "notify_signups.sql",
+  "seed_publishers.sql"
+]

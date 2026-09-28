@@ -1,0 +1,360 @@
+/**
+ * FeedO+ (RSS+) — Stylesheet Plugin
+ * Sandboxed styles for top-left Community Discovery menu
+ */
+
+/* ─── Top-Left Header Wrap ──────────────── */
+.header-left-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.feedoplus-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Trigger Button (Sleek 32px pill/box) */
+.feedoplus-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 32px;
+  padding: 0 0.65rem;
+  background: #ffffff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 9px;
+  color: #1f2937;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.feedoplus-trigger-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+.feedoplus-trigger-btn:active {
+  transform: translateY(0);
+}
+
+.feedoplus-trigger-btn .feedoplus-icon {
+  font-size: 0.95rem;
+  line-height: 1;
+  display: inline-block;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.feedoplus-trigger-btn:hover .feedoplus-icon {
+  transform: scale(1.15) rotate(-6deg);
+}
+
+.feedoplus-trigger-btn .feedoplus-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.feedoplus-trigger-btn .feedoplus-badge {
+  background: #ff7619;
+  color: #ffffff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Dropdown Menu ──────────────── */
+.feedoplus-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  right: auto;
+  width: 320px;
+  max-width: calc(100vw - 28px);
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.16), 0 6px 16px -2px rgba(0, 0, 0, 0.08);
+  padding: 0.65rem 0.6rem 0.5rem;
+  z-index: 1000;
+  display: none;
+  flex-direction: column;
+  font-family: 'Inter', sans-serif;
+  transform-origin: top left;
+}
+
+.feedoplus-dropdown.active {
+  display: flex;
+  animation: feedoPlusSmoothPullDown 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes feedoPlusSmoothPullDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.96);
+  }
+  60% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Top Banner inside Dropdown */
+.feedoplus-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.2rem 0.4rem 0.45rem;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 0.45rem;
+}
+
+.feedoplus-banner-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.feedoplus-banner-tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  background: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #fed7aa;
+  padding: 1px 6px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Search input */
+.feedoplus-search-container {
+  margin-bottom: 0.5rem;
+}
+
+.feedoplus-search-input {
+  width: 100%;
+  padding: 0.42rem 0.75rem;
+  font-size: 0.82rem;
+  font-family: 'Inter', sans-serif;
+  border: 1.5px solid #fe741e;
+  border-radius: 8px;
+  outline: none;
+  color: #1e293b;
+  background: #ffffff;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.feedoplus-search-input:focus {
+  border-color: #ea580c;
+  box-shadow: 0 0 0 2px rgba(254, 116, 30, 0.2);
+}
+
+.feedoplus-search-input::placeholder {
+  color: #94a3b8;
+}
+
+/* Scrollable Categories */
+.feedoplus-scroll-area {
+  display: flex;
+  flex-direction: column;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.feedoplus-scroll-area::-webkit-scrollbar {
+  width: 5px;
+}
+.feedoplus-scroll-area::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.feedoplus-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Category Accordion Group */
+.feedoplus-group {
+  margin-bottom: 0.2rem;
+}
+
+.feedoplus-parent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.45rem 0.55rem;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.83rem;
+  font-weight: 500;
+  color: #334155;
+  transition: background 0.12s ease, color 0.12s ease;
+  user-select: none;
+  text-align: left;
+}
+
+.feedoplus-parent-item:hover {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.feedoplus-parent-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.feedoplus-parent-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.feedoplus-parent-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.feedoplus-parent-count {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  font-weight: 500;
+  margin-left: 0.2rem;
+}
+
+.feedoplus-chevron {
+  font-size: 0.62rem;
+  color: #94a3b8;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s ease;
+}
+
+.feedoplus-group.open .feedoplus-chevron {
+  transform: rotate(90deg);
+  color: #ea580c;
+}
+
+/* Submenu Items List */
+.feedoplus-submenu {
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0.15rem 0 0.35rem 1.4rem;
+  margin-left: 0.4rem;
+  border-left: 2px solid #fed7aa;
+}
+
+.feedoplus-group.open .feedoplus-submenu {
+  display: flex;
+  animation: feedoPlusSubmenuSlide 0.2s ease forwards;
+}
+
+@keyframes feedoPlusSubmenuSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.feedoplus-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  text-align: left;
+  transition: all 0.12s ease;
+}
+
+.feedoplus-item:hover {
+  background: #f1f5f9;
+}
+
+.feedoplus-item-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.feedoplus-item-bullet {
+  color: #ea580c;
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.feedoplus-item-name {
+  font-size: 0.81rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.feedoplus-item:hover .feedoplus-item-name {
+  color: #ea580c;
+}
+
+.feedoplus-item-desc {
+  font-size: 0.70rem;
+  color: #64748b;
+  line-height: 1.25;
+  margin-top: 1px;
+  padding-left: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 250px;
+}
+
+/* Empty search result */
+.feedoplus-empty {
+  padding: 1.5rem 1rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .feedoplus-trigger-btn .feedoplus-label {
+    display: none;
+  }
+  .feedoplus-trigger-btn {
+    padding: 0 0.5rem;
+  }
+  .feedoplus-dropdown {
+    width: min(300px, calc(100vw - 32px));
+    left: 0;
+  }
+}

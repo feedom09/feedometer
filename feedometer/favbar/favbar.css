@@ -1,0 +1,32 @@
+/* ========================================================================= */
+/*  FEEDOMETER 2.1 — FLOATING FAVORITES BAR STYLESHEET                        */
+/* ========================================================================= */
+
+.feedo-favbar-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.65rem;
+  background: var(--bg-card-hover, #f8fafc);
+  border-radius: 999px;
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.feedo-favbar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary, #475569);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.feedo-favbar-item:hover, .feedo-favbar-item.active {
+  background: var(--text-primary, #0f172a);
+  color: #ffffff;
+}
