@@ -1,0 +1,535 @@
+/**
+ * styles/settings-modal.css — Paay-Inspired SaaS Identity & Settings Modal
+ * Luxury Glassmorphism Backdrop, Sapphire Navigation & High-Density Details Cards
+ */
+
+/* Backdrop with High-Performance Glass Blur */
+.feedo-settings-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.feedo-settings-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Master Floating Modal Container */
+.feedo-settings-modal {
+  width: 100%;
+  max-width: 1060px;
+  height: min(720px, 88vh);
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2);
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  overflow: hidden;
+  position: relative;
+  transform: scale(0.96) translateY(12px);
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.feedo-settings-backdrop.open .feedo-settings-modal {
+  transform: scale(1) translateY(0);
+}
+
+/* ── LEFT SIDEBAR (Cobalt/Sapphire Gradient) ── */
+.settings-sidebar {
+  background: linear-gradient(175deg, #1e40af 0%, #1d4ed8 50%, #2563eb 100%);
+  color: #ffffff;
+  padding: 1.75rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  user-select: none;
+}
+
+.settings-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 1.5rem;
+}
+
+.settings-sidebar-logo {
+  font-size: 1.5rem;
+}
+
+.settings-sidebar-title {
+  font-family: var(--font-display, 'Quicksand', -apple-system, BlinkMacSystemFont, sans-serif);
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+.settings-sidebar-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  text-transform: uppercase;
+  margin-left: auto;
+}
+
+.settings-nav-group-title {
+  font-size: 0.68rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 0.6rem;
+  padding-left: 0.5rem;
+}
+
+.settings-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.settings-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.settings-nav-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.settings-nav-item.active {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.settings-nav-item.danger-item:hover,
+.settings-nav-item.danger-item.active {
+  background: rgba(239, 68, 68, 0.3);
+  color: #fecaca;
+}
+
+.settings-sidebar-footer {
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ── RIGHT CONTENT VIEWPORT ── */
+.settings-main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #f8fafc;
+  overflow: hidden;
+}
+
+/* Top Modal Bar */
+.settings-topbar {
+  padding: 1.15rem 1.75rem;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.settings-breadcrumb {
+  font-size: 0.9rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.settings-breadcrumb strong {
+  color: #0f172a;
+  font-weight: 750;
+}
+
+.settings-close-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.settings-close-btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+  transform: rotate(90deg);
+}
+
+/* Tab Panels Scroll Container */
+.settings-scroll-body {
+  flex: 1;
+  padding: 1.5rem 1.75rem;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+.settings-scroll-body::-webkit-scrollbar {
+  width: 6px;
+}
+.settings-scroll-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+.settings-scroll-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Tab View Switcher */
+.settings-tab-view {
+  display: none;
+  animation: fadeInModal 0.18s ease forwards;
+}
+
+.settings-tab-view.active {
+  display: block;
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── PAAY-STYLE PROFILE 2-COLUMN HERO ── */
+.profile-paay-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .feedo-settings-modal {
+    grid-template-columns: 1fr;
+    height: 94vh;
+  }
+  .settings-sidebar {
+    display: none;
+  }
+  .profile-paay-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Left Hero Avatar Card */
+.profile-hero-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 1.5rem 1.25rem;
+  text-align: center;
+  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.04);
+}
+
+.profile-hero-avatar-wrap {
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 1rem auto;
+  border-radius: 50%;
+  padding: 3px;
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.2);
+}
+
+.profile-hero-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #1e3a8a;
+  color: #ffffff;
+  font-size: 2.2rem;
+  font-weight: 750;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid #ffffff;
+}
+
+.profile-hero-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-hero-name {
+  font-size: 1.15rem;
+  font-weight: 750;
+  color: #0f172a;
+  margin-bottom: 0.2rem;
+}
+
+.profile-hero-role {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #2563eb;
+  margin-bottom: 1rem;
+}
+
+.profile-progress-box {
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 0.75rem 0.85rem;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.profile-progress-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #475569;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
+.profile-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #cbd5e1;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.profile-progress-fill {
+  width: 100%;
+  height: 100%;
+  background: #2563eb;
+  border-radius: 999px;
+}
+
+.profile-hero-meta-list {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  font-size: 0.8rem;
+}
+
+.profile-hero-meta-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-hero-meta-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.profile-hero-meta-value {
+  font-weight: 600;
+  color: #0f172a;
+  word-break: break-all;
+}
+
+/* Right Section Group Cards */
+.settings-section-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 1.35rem 1.5rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.04);
+}
+
+.settings-section-card:last-child {
+  margin-bottom: 0;
+}
+
+.settings-section-title {
+  font-size: 1rem;
+  font-weight: 750;
+  color: #0f172a;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* High-Density Paay Key-Value List */
+.paay-data-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.paay-data-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.86rem;
+}
+
+.paay-data-row:last-child {
+  border-bottom: none;
+}
+
+.paay-data-label {
+  color: #64748b;
+  font-weight: 500;
+  flex: 0 0 160px;
+}
+
+.paay-data-value {
+  color: #0f172a;
+  font-weight: 600;
+  text-align: right;
+  flex: 1;
+}
+
+/* Editable Inputs */
+.paay-input {
+  padding: 0.45rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.86rem;
+  color: #0f172a;
+  background: #ffffff;
+  outline: none;
+  width: 100%;
+  max-width: 240px;
+  transition: all 0.15s ease;
+}
+
+.paay-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* Modern iOS Style Switch Toggle */
+.paay-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.paay-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.paay-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #cbd5e1;
+  transition: .2s;
+  border-radius: 24px;
+}
+
+.paay-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .2s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+input:checked + .paay-slider {
+  background-color: #2563eb;
+}
+
+input:checked + .paay-slider:before {
+  transform: translateX(20px);
+}
+
+/* Action Buttons */
+.paay-btn-primary {
+  padding: 0.55rem 1.15rem;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.paay-btn-primary:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.paay-btn-secondary {
+  padding: 0.55rem 1.15rem;
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.paay-btn-secondary:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
